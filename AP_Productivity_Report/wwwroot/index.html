@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AP Specialist Productivity Report — ECMToolbox Workflow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ===================================================
+           EasyFile Design Tokens (UI_STANDARDS.md v1)
+           =================================================== */
+        :root {
+            --ef-font-family: 'Inter', ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+            --ef-text-24: 24px;
+            --ef-text-18: 18px;
+            --ef-text-14: 14px;
+            --ef-text-13: 13px;
+            --ef-text-12: 12px;
+
+            --ef-text: #1a1a1a;
+            --ef-text-secondary: #5c5c5c;
+            --ef-text-muted: #8a8a8a;
+            --ef-bg: #f5f5f5;
+            --ef-surface: #ffffff;
+            --ef-surface-2: #f9f9f9;
+            --ef-border: #e0e0e0;
+            --ef-primary: #2563eb;
+            --ef-primary-hover: #1d4ed8;
+            --ef-primary-text: #ffffff;
+            --ef-status-success: #16a34a;
+            --ef-status-warning: #d97706;
+            --ef-status-danger: #dc2626;
+            --ef-status-info: #2563eb;
+
+            --ef-space-4: 4px;
+            --ef-space-8: 8px;
+            --ef-space-12: 12px;
+            --ef-space-16: 16px;
+            --ef-space-24: 24px;
+            --ef-space-32: 32px;
+            --ef-space-40: 40px;
+
+            --ef-radius-6: 6px;
+            --ef-radius-10: 10px;
+            --ef-radius-14: 14px;
+
+            --ef-shadow-1: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --ef-shadow-2: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        /* ===================================================
+           Reset & Base
+           =================================================== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--ef-font-family);
+            font-size: var(--ef-text-14);
+            color: var(--ef-text);
+            background: var(--ef-bg);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===================================================
+           Layout Shell
+           =================================================== */
+        .page-header {
+            background: var(--ef-surface);
+            border-bottom: 1px solid var(--ef-border);
+            padding: var(--ef-space-16) var(--ef-space-32);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .page-header-left { display: flex; align-items: center; gap: var(--ef-space-12); }
+        .page-header h1 {
+            font-size: var(--ef-text-18);
+            font-weight: 600;
+            color: var(--ef-text);
+        }
+        .page-header .breadcrumb {
+            font-size: var(--ef-text-12);
+            color: var(--ef-text-muted);
+        }
+        .page-header .breadcrumb a {
+            color: var(--ef-primary);
+            text-decoration: none;
+        }
+        .page-header .breadcrumb a:hover { text-decoration: underline; }
+
+        .page-header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--ef-space-12);
+        }
+        .settings-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: var(--ef-radius-6);
+            color: var(--ef-text-muted);
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+        .settings-link:hover {
+            background: var(--ef-surface-2);
+            color: var(--ef-text);
+        }
+        .settings-link svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .page-body {
+            padding: var(--ef-space-24) var(--ef-space-32);
+            max-width: 1400px;
+        }
+
+        /* ===================================================
+           Config Banner
+           =================================================== */
+        .config-banner {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: var(--ef-radius-10);
+            padding: var(--ef-space-12) var(--ef-space-24);
+            margin-bottom: var(--ef-space-24);
+            display: flex;
+            align-items: center;
+            gap: var(--ef-space-12);
+            font-size: var(--ef-text-14);
+            color: #92400e;
+        }
+        .config-banner a {
+            color: var(--ef-primary);
+            font-weight: 500;
+        }
+        .config-banner.hidden { display: none; }
+
+        /* ===================================================
+           Filter Bar (Card)
+           =================================================== */
+        .filter-bar {
+            background: var(--ef-surface);
+            border: 1px solid var(--ef-border);
+            border-radius: var(--ef-radius-10);
+            box-shadow: var(--ef-shadow-1);
+            padding: var(--ef-space-16) var(--ef-space-24);
+            display: flex;
+            align-items: flex-end;
+            gap: var(--ef-space-16);
+            flex-wrap: wrap;
+            margin-bottom: var(--ef-space-24);
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--ef-space-4);
+        }
+        .filter-group label {
+            font-size: var(--ef-text-12);
+            font-weight: 500;
+            color: var(--ef-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .filter-group input[type="date"],
+        .filter-group select {
+            font-family: var(--ef-font-family);
+            font-size: var(--ef-text-13);
+            color: var(--ef-text);
+            background: var(--ef-surface);
+            border: 1px solid var(--ef-border);
+            border-radius: var(--ef-radius-6);
+            padding: var(--ef-space-8) var(--ef-space-12);
+            min-width: 160px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .filter-group input[type="date"]:focus,
+        .filter-group select:focus {
+            border-color: var(--ef-primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        }
+        .filter-actions {
+            display: flex;
+            gap: var(--ef-space-8);
+            margin-left: auto;
+        }
+
+        /* ===================================================
+           Buttons
+           =================================================== */
+        .btn {
+            font-family: var(--ef-font-family);
+            font-size: var(--ef-text-13);
+            font-weight: 500;
+            border: none;
+            border-radius: var(--ef-radius-6);
+            padding: var(--ef-space-8) var(--ef-space-16);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--ef-space-8);
+            transition: background 0.15s, box-shadow 0.15s;
+            outline: none;
+        }
+        .btn:focus-visible {
+            box-shadow: 0 0 0 2px var(--ef-surface), 0 0 0 4px var(--ef-primary);
+        }
+        .btn-primary {
+            background: var(--ef-primary);
+            color: var(--ef-primary-text);
+        }
+        .btn-primary:hover { background: var(--ef-primary-hover); }
+        .btn-secondary {
+            background: var(--ef-surface);
+            color: var(--ef-text);
+            border: 1px solid var(--ef-border);
+        }
+        .btn-secondary:hover { background: var(--ef-surface-2); }
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+        /* ===================================================
+           Summary Strip (KPI Cards)
+           =================================================== */
+        .summary-strip {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: var(--ef-space-16);
+            margin-bottom: var(--ef-space-24);
+        }
+        .kpi-card {
+            background: var(--ef-surface);
+            border: 1px solid var(--ef-border);
+            border-radius: var(--ef-radius-10);
+            box-shadow: var(--ef-shadow-1);
+            padding: var(--ef-space-16);
+            display: flex;
+            flex-direction: column;
+            gap: var(--ef-space-4);
+        }
+        .kpi-card .kpi-label {
+            font-size: var(--ef-text-12);
+            font-weight: 500;
+            color: var(--ef-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .kpi-card .kpi-value {
+            font-size: var(--ef-text-24);
+            font-weight: 600;
+            color: var(--ef-text);
+        }
+        .kpi-card .kpi-sub {
+            font-size: var(--ef-text-12);
+            color: var(--ef-text-muted);
+        }
+
+        /* ===================================================
+           Results Table
+           =================================================== */
+        .results-card {
+            background: var(--ef-surface);
+            border: 1px solid var(--ef-border);
+            border-radius: var(--ef-radius-10);
+            box-shadow: var(--ef-shadow-1);
+            overflow: hidden;
+        }
+        .results-header {
+            padding: var(--ef-space-12) var(--ef-space-24);
+            border-bottom: 1px solid var(--ef-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .results-header .results-title {
+            font-size: var(--ef-text-14);
+            font-weight: 600;
+            color: var(--ef-text);
+        }
+        .results-header .results-count {
+            font-size: var(--ef-text-12);
+            color: var(--ef-text-muted);
+        }
+        .table-wrap {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: var(--ef-text-13);
+        }
+        thead th {
+            background: var(--ef-surface-2);
+            border-bottom: 2px solid var(--ef-border);
+            padding: var(--ef-space-8) var(--ef-space-12);
+            text-align: left;
+            font-weight: 600;
+            font-size: var(--ef-text-12);
+            color: var(--ef-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        thead th:hover { color: var(--ef-text); }
+        thead th .sort-icon {
+            display: inline-block;
+            margin-left: var(--ef-space-4);
+            opacity: 0.4;
+            font-size: 10px;
+        }
+        thead th.sorted .sort-icon { opacity: 1; color: var(--ef-primary); }
+        tbody tr {
+            border-bottom: 1px solid var(--ef-border);
+            transition: background 0.1s;
+        }
+        tbody tr:hover { background: var(--ef-surface-2); }
+        tbody td {
+            padding: var(--ef-space-8) var(--ef-space-12);
+            color: var(--ef-text);
+            white-space: nowrap;
+        }
+        tbody td.wrap { white-space: normal; max-width: 200px; }
+        tbody td.currency { text-align: right; font-variant-numeric: tabular-nums; }
+        tbody td.number { text-align: right; font-variant-numeric: tabular-nums; }
+
+        /* Status badge */
+        .badge {
+            display: inline-block;
+            font-size: var(--ef-text-12);
+            font-weight: 500;
+            padding: 2px var(--ef-space-8);
+            border-radius: 999px;
+            line-height: 1.5;
+        }
+        .badge-success {
+            background: #dcfce7;
+            color: var(--ef-status-success);
+        }
+        .badge-warning {
+            background: #fef3c7;
+            color: var(--ef-status-warning);
+        }
+        .badge-info {
+            background: #dbeafe;
+            color: var(--ef-status-info);
+        }
+        .badge-danger {
+            background: #fee2e2;
+            color: var(--ef-status-danger);
+        }
+
+        /* SLA color coding */
+        .sla-green { color: var(--ef-status-success); font-weight: 600; }
+        .sla-yellow { color: var(--ef-status-warning); font-weight: 600; }
+        .sla-red { color: var(--ef-status-danger); font-weight: 600; }
+
+        /* ===================================================
+           Pagination
+           =================================================== */
+        .results-footer {
+            padding: var(--ef-space-12) var(--ef-space-24);
+            border-top: 1px solid var(--ef-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: var(--ef-text-12);
+            color: var(--ef-text-muted);
+        }
+        .pagination {
+            display: flex;
+            gap: var(--ef-space-4);
+        }
+        .pagination button {
+            font-family: var(--ef-font-family);
+            font-size: var(--ef-text-12);
+            font-weight: 500;
+            background: var(--ef-surface);
+            border: 1px solid var(--ef-border);
+            border-radius: var(--ef-radius-6);
+            padding: var(--ef-space-4) var(--ef-space-8);
+            cursor: pointer;
+            color: var(--ef-text-secondary);
+            min-width: 32px;
+            text-align: center;
+        }
+        .pagination button:hover { background: var(--ef-surface-2); }
+        .pagination button.active {
+            background: var(--ef-primary);
+            color: var(--ef-primary-text);
+            border-color: var(--ef-primary);
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ===================================================
+           Empty/Loading state
+           =================================================== */
+        .empty-state {
+            padding: var(--ef-space-40);
+            text-align: center;
+            color: var(--ef-text-muted);
+            font-size: var(--ef-text-14);
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--ef-border);
+            border-top-color: var(--ef-primary);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===================================================
+           Accessibility
+           =================================================== */
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <div>
+                <div class="breadcrumb"><a href="#">Reports</a> &nbsp;/&nbsp; AP Specialist Productivity</div>
+                <h1>AP Specialist Productivity Report</h1>
+            </div>
+        </div>
+        <div class="page-header-right">
+            <a href="/settings.html" class="settings-link" title="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <div class="page-body">
+
+        <!-- Config Banner (shown when DB not configured) -->
+        <div class="config-banner hidden" id="configBanner">
+            Database connections not configured. <a href="/settings.html">Click here to set up database connections</a> before running reports.
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>Workflow</label>
+                <select id="workflowSelect">
+                    <option value="7">Loading...</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Preset</label>
+                <select id="preset">
+                    <option value="custom">Custom Range</option>
+                    <option value="mtd">Month to Date</option>
+                    <option value="qtd">Quarter to Date</option>
+                    <option value="ytd" selected>Year to Date</option>
+                    <option value="last-month">Last Month</option>
+                    <option value="last-quarter">Last Quarter</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Start Date</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="filter-group">
+                <label>End Date</label>
+                <input type="date" id="endDate">
+            </div>
+            <div class="filter-group">
+                <label>Date Basis</label>
+                <select id="dateBasis">
+                    <option value="system" selected>System Created Date</option>
+                    <option value="invoice">Invoice Date</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-primary" id="runBtn" onclick="runReport()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    Run Report
+                </button>
+                <button class="btn btn-secondary" id="exportBtn" onclick="exportCSV()" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Export CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Strip (KPIs) -->
+        <div class="summary-strip">
+            <div class="kpi-card">
+                <span class="kpi-label">Total Invoices</span>
+                <span class="kpi-value" id="kpiTotal">--</span>
+                <span class="kpi-sub" id="kpiTotalSub">Run report to load data</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Total Dollar Value</span>
+                <span class="kpi-value" id="kpiDollars">--</span>
+                <span class="kpi-sub">All processed invoices</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Unique Processors</span>
+                <span class="kpi-value" id="kpiProcessors">--</span>
+                <span class="kpi-sub">AP specialists active</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Unique Vendors</span>
+                <span class="kpi-value" id="kpiVendors">--</span>
+                <span class="kpi-sub">Distinct vendor names</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Avg Processing Days</span>
+                <span class="kpi-value" id="kpiDays">--</span>
+                <span class="kpi-sub">Receipt to final approval</span>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="results-card">
+            <div class="results-header">
+                <span class="results-title">Invoice Detail</span>
+                <span class="results-count" id="resultsCount">No data loaded</span>
+            </div>
+            <div class="table-wrap">
+                <table id="reportTable">
+                    <thead>
+                        <tr>
+                            <th data-key="apProcessor" data-type="string" onclick="sortBy(this)">AP Processor <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="vendorName" data-type="string" onclick="sortBy(this)">Vendor Name <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="invoiceDate" data-type="date" onclick="sortBy(this)">Invoice Date <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="invoiceNumber" data-type="string" onclick="sortBy(this)">Invoice # <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="amount" data-type="number" onclick="sortBy(this)">Invoice Amount <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="systemEntryDate" data-type="date" onclick="sortBy(this)">System Entry <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="siteMgrApprover" data-type="string" onclick="sortBy(this)">Site Mgr Approver <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="siteMgrDate" data-type="date" onclick="sortBy(this)">Site Mgr Date <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="mgrDays" data-type="number" onclick="sortBy(this)">Mgr Days <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="apApprover" data-type="string" onclick="sortBy(this)">AP Approver <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="apApprovalDate" data-type="date" onclick="sortBy(this)">AP Approval Date <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="apDays" data-type="number" onclick="sortBy(this)">AP Days <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="totalDays" data-type="number" onclick="sortBy(this)">Total Days <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="comments" data-type="string" onclick="sortBy(this)">Comments <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th data-key="status" data-type="string" onclick="sortBy(this)">Status <span class="sort-icon">&#9650;&#9660;</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportBody">
+                        <tr><td colspan="15" class="empty-state">Click "Run Report" to load data from the database.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="results-footer">
+                <span id="footerInfo">No data loaded</span>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ── State ─────────────────────────────────────────────────────────
+        let reportData = [];       // full items array from API
+        let sortedData = [];       // after sorting
+        let currentPage = 1;
+        const pageSize = 25;
+        let sortKey = null;
+        let sortDir = 'asc';
+
+        // ── Init ──────────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', function() {
+            applyPresetDates();
+            checkSettings();
+            loadWorkflows();
+        });
+
+        // ── Check if DB is configured ────────────────────────────────────
+        async function checkSettings() {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+                if (!data.configured) {
+                    document.getElementById('configBanner').classList.remove('hidden');
+                }
+            } catch (e) {
+                // Ignore — settings endpoint might not be reachable
+            }
+        }
+
+        // ── Load workflows dropdown ───────────────────────────────────────
+        async function loadWorkflows() {
+            try {
+                const res = await fetch('/api/workflows');
+                const workflows = await res.json();
+                if (workflows.error) {
+                    console.error('Workflows error:', workflows.error);
+                    document.getElementById('workflowSelect').innerHTML =
+                        '<option value="7">7 - AP DEMO - 3 WAY MATCH (fallback)</option>';
+                    runReport();
+                    return;
+                }
+                const sel = document.getElementById('workflowSelect');
+                sel.innerHTML = '';
+                workflows.forEach(function(wf) {
+                    const opt = document.createElement('option');
+                    opt.value = wf.workflowId;
+                    opt.textContent = wf.workflowId + ' - ' + wf.workflowName;
+                    if (wf.workflowId === 7) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+                // Auto-run report after workflows load
+                runReport();
+            } catch (e) {
+                console.error('Failed to load workflows:', e);
+                document.getElementById('workflowSelect').innerHTML =
+                    '<option value="7">7 - AP DEMO - 3 WAY MATCH (fallback)</option>';
+                runReport();
+            }
+        }
+
+        // ── Preset date range logic ───────────────────────────────────────
+        document.getElementById('preset').addEventListener('change', function() {
+            applyPresetDates();
+        });
+
+        function applyPresetDates() {
+            const preset = document.getElementById('preset').value;
+            const today = new Date();
+            const startEl = document.getElementById('startDate');
+            const endEl = document.getElementById('endDate');
+            const fmt = function(d) { return d.toISOString().split('T')[0]; };
+
+            switch(preset) {
+                case 'mtd':
+                    startEl.value = fmt(new Date(today.getFullYear(), today.getMonth(), 1));
+                    endEl.value = fmt(today);
+                    break;
+                case 'qtd':
+                    var qStart = Math.floor(today.getMonth() / 3) * 3;
+                    startEl.value = fmt(new Date(today.getFullYear(), qStart, 1));
+                    endEl.value = fmt(today);
+                    break;
+                case 'ytd':
+                    startEl.value = fmt(new Date(today.getFullYear(), 0, 1));
+                    endEl.value = fmt(today);
+                    break;
+                case 'last-month':
+                    startEl.value = fmt(new Date(today.getFullYear(), today.getMonth() - 1, 1));
+                    endEl.value = fmt(new Date(today.getFullYear(), today.getMonth(), 0));
+                    break;
+                case 'last-quarter':
+                    var lqEnd = Math.floor(today.getMonth() / 3) * 3;
+                    startEl.value = fmt(new Date(today.getFullYear(), lqEnd - 3, 1));
+                    endEl.value = fmt(new Date(today.getFullYear(), lqEnd, 0));
+                    break;
+            }
+        }
+
+        // ── Run Report ────────────────────────────────────────────────────
+        async function runReport() {
+            var workflowId = document.getElementById('workflowSelect').value;
+            var start = document.getElementById('startDate').value;
+            var end = document.getElementById('endDate').value;
+            var dateBasis = document.getElementById('dateBasis').value;
+
+            var btn = document.getElementById('runBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Loading...';
+
+            var tbody = document.getElementById('reportBody');
+            tbody.innerHTML = '<tr><td colspan="15" class="empty-state"><span class="loading-spinner"></span> Loading data from database...</td></tr>';
+
+            try {
+                var url = '/api/reports/ap-productivity?workflowId=' + encodeURIComponent(workflowId)
+                    + '&start=' + encodeURIComponent(start)
+                    + '&end=' + encodeURIComponent(end)
+                    + '&dateBasis=' + encodeURIComponent(dateBasis);
+
+                var res = await fetch(url);
+                var data = await res.json();
+
+                if (data.error) {
+                    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">Error: ' + escapeHtml(data.error) + '</td></tr>';
+                    return;
+                }
+
+                reportData = data.items || [];
+                sortedData = reportData.slice();
+                sortKey = null;
+                currentPage = 1;
+
+                // Update KPIs
+                var s = data.summary || {};
+                document.getElementById('kpiTotal').textContent = (s.totalInvoices || 0).toLocaleString();
+                document.getElementById('kpiDollars').textContent = '$' + (s.totalDollars || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                document.getElementById('kpiProcessors').textContent = (s.uniqueProcessors || 0).toLocaleString();
+                document.getElementById('kpiVendors').textContent = (s.uniqueVendors || 0).toLocaleString();
+                document.getElementById('kpiDays').textContent = s.avgProcessingDays != null ? s.avgProcessingDays : '--';
+
+                var startFmt = formatDisplayDate(start);
+                var endFmt = formatDisplayDate(end);
+                document.getElementById('kpiTotalSub').textContent = startFmt + ' – ' + endFmt;
+
+                document.getElementById('exportBtn').disabled = reportData.length === 0;
+
+                // Clear sort indicators
+                document.querySelectorAll('thead th').forEach(function(th) {
+                    th.classList.remove('sorted');
+                    th.querySelector('.sort-icon').innerHTML = '&#9650;&#9660;';
+                });
+
+                renderTable();
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="15" class="empty-state">Failed to connect to server. Make sure the application is running.</td></tr>';
+                console.error('Report error:', e);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Run Report';
+            }
+        }
+
+        // ── Render table for current page ─────────────────────────────────
+        function renderTable() {
+            var tbody = document.getElementById('reportBody');
+            var total = sortedData.length;
+
+            if (total === 0) {
+                tbody.innerHTML = '<tr><td colspan="15" class="empty-state">No invoices found for the selected criteria.</td></tr>';
+                document.getElementById('resultsCount').textContent = '0 invoices';
+                document.getElementById('footerInfo').textContent = 'No data';
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            var startIdx = (currentPage - 1) * pageSize;
+            var endIdx = Math.min(startIdx + pageSize, total);
+            var pageItems = sortedData.slice(startIdx, endIdx);
+
+            var html = '';
+            pageItems.forEach(function(item) {
+                html += '<tr>';
+                html += '<td>' + escapeHtml(item.apProcessor) + '</td>';
+                html += '<td>' + escapeHtml(item.vendorName) + '</td>';
+                html += '<td>' + formatDate(item.invoiceDate) + '</td>';
+                html += '<td>' + escapeHtml(item.invoiceNumber) + '</td>';
+                html += '<td class="currency">' + formatCurrency(item.amount) + '</td>';
+                html += '<td>' + formatDate(item.systemEntryDate) + '</td>';
+                html += '<td>' + escapeHtml(item.siteMgrApprover) + '</td>';
+                html += '<td>' + formatDate(item.siteMgrDate) + '</td>';
+                html += '<td class="number">' + formatDaysWithSLA(item.mgrDays) + '</td>';
+                html += '<td>' + escapeHtml(item.apApprover) + '</td>';
+                html += '<td>' + formatDate(item.apApprovalDate) + '</td>';
+                html += '<td class="number">' + formatDaysWithSLA(item.apDays) + '</td>';
+                html += '<td class="number">' + formatDaysWithSLA(item.totalDays) + '</td>';
+                html += '<td class="wrap">' + escapeHtml(item.comments) + '</td>';
+                html += '<td>' + formatStatus(item.status) + '</td>';
+                html += '</tr>';
+            });
+            tbody.innerHTML = html;
+
+            // Update counts
+            document.getElementById('resultsCount').textContent =
+                'Showing ' + (startIdx + 1) + '–' + endIdx + ' of ' + total.toLocaleString() + ' invoices';
+            document.getElementById('footerInfo').textContent =
+                'Showing ' + (startIdx + 1) + '–' + endIdx + ' of ' + total.toLocaleString() + ' invoices';
+
+            renderPagination(total);
+        }
+
+        // ── Pagination ────────────────────────────────────────────────────
+        function renderPagination(total) {
+            var totalPages = Math.ceil(total / pageSize);
+            var pag = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                pag.innerHTML = '';
+                return;
+            }
+
+            var html = '';
+            html += '<button ' + (currentPage === 1 ? 'disabled' : '') + ' onclick="goToPage(1)">&laquo;</button>';
+            html += '<button ' + (currentPage === 1 ? 'disabled' : '') + ' onclick="goToPage(' + (currentPage - 1) + ')">&lsaquo;</button>';
+
+            var startP = Math.max(1, currentPage - 2);
+            var endP = Math.min(totalPages, currentPage + 2);
+
+            if (startP > 1) {
+                html += '<button onclick="goToPage(1)">1</button>';
+                if (startP > 2) html += '<button disabled>...</button>';
+            }
+
+            for (var p = startP; p <= endP; p++) {
+                html += '<button class="' + (p === currentPage ? 'active' : '') + '" onclick="goToPage(' + p + ')">' + p + '</button>';
+            }
+
+            if (endP < totalPages) {
+                if (endP < totalPages - 1) html += '<button disabled>...</button>';
+                html += '<button onclick="goToPage(' + totalPages + ')">' + totalPages + '</button>';
+            }
+
+            html += '<button ' + (currentPage === totalPages ? 'disabled' : '') + ' onclick="goToPage(' + (currentPage + 1) + ')">&rsaquo;</button>';
+            html += '<button ' + (currentPage === totalPages ? 'disabled' : '') + ' onclick="goToPage(' + totalPages + ')">&raquo;</button>';
+
+            pag.innerHTML = html;
+        }
+
+        function goToPage(p) {
+            var totalPages = Math.ceil(sortedData.length / pageSize);
+            if (p < 1 || p > totalPages) return;
+            currentPage = p;
+            renderTable();
+            document.querySelector('.table-wrap').scrollTop = 0;
+        }
+
+        // ── Sorting ───────────────────────────────────────────────────────
+        function sortBy(th) {
+            var key = th.getAttribute('data-key');
+            var type = th.getAttribute('data-type');
+
+            if (sortKey === key) {
+                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortKey = key;
+                sortDir = 'asc';
+            }
+
+            // Update header indicators
+            document.querySelectorAll('thead th').forEach(function(h) {
+                h.classList.remove('sorted');
+                h.querySelector('.sort-icon').innerHTML = '&#9650;&#9660;';
+            });
+            th.classList.add('sorted');
+            th.querySelector('.sort-icon').innerHTML = sortDir === 'asc' ? '&#9650;' : '&#9660;';
+
+            sortedData.sort(function(a, b) {
+                var va = a[key];
+                var vb = b[key];
+
+                if (va == null && vb == null) return 0;
+                if (va == null) return 1;
+                if (vb == null) return -1;
+
+                if (type === 'number') {
+                    va = parseFloat(va) || 0;
+                    vb = parseFloat(vb) || 0;
+                } else if (type === 'date') {
+                    va = va || '';
+                    vb = vb || '';
+                } else {
+                    va = String(va).toLowerCase();
+                    vb = String(vb).toLowerCase();
+                }
+
+                var cmp = 0;
+                if (va < vb) cmp = -1;
+                else if (va > vb) cmp = 1;
+
+                return sortDir === 'asc' ? cmp : -cmp;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        // ── Formatting helpers ────────────────────────────────────────────
+        function escapeHtml(str) {
+            if (!str) return '';
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function formatDate(isoStr) {
+            if (!isoStr) return '';
+            var parts = isoStr.split('-');
+            if (parts.length !== 3) return isoStr;
+            return parts[1] + '/' + parts[2] + '/' + parts[0];
+        }
+
+        function formatDisplayDate(isoStr) {
+            if (!isoStr) return '';
+            var d = new Date(isoStr + 'T00:00:00');
+            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+        }
+
+        function formatCurrency(val) {
+            if (val == null) return '';
+            return '$' + Number(val).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        function formatDaysWithSLA(days) {
+            if (days == null) return '';
+            var cls = '';
+            if (days <= 3) cls = 'sla-green';
+            else if (days <= 30) cls = 'sla-yellow';
+            else cls = 'sla-red';
+            return '<span class="' + cls + '">' + days + '</span>';
+        }
+
+        function formatStatus(status) {
+            if (status === 'Completed') {
+                return '<span class="badge badge-success">Completed</span>';
+            } else if (status === 'In Progress') {
+                return '<span class="badge badge-warning">In Progress</span>';
+            }
+            return '<span class="badge badge-info">' + escapeHtml(status) + '</span>';
+        }
+
+        // ── CSV Export ────────────────────────────────────────────────────
+        function exportCSV() {
+            if (sortedData.length === 0) return;
+
+            var headers = [
+                'AP Processor', 'Vendor Name', 'Invoice Date', 'Invoice #', 'Invoice Amount',
+                'System Entry', 'Site Mgr Approver', 'Site Mgr Date', 'Mgr Days',
+                'AP Approver', 'AP Approval Date', 'AP Days', 'Total Days', 'Comments', 'Status'
+            ];
+
+            var csv = '\uFEFF'; // UTF-8 BOM
+            csv += headers.join(',') + '\r\n';
+
+            sortedData.forEach(function(item) {
+                var row = [
+                    csvCell(item.apProcessor),
+                    csvCell(item.vendorName),
+                    csvCell(formatDate(item.invoiceDate)),
+                    csvCell(item.invoiceNumber),
+                    item.amount != null ? item.amount : '',
+                    csvCell(formatDate(item.systemEntryDate)),
+                    csvCell(item.siteMgrApprover),
+                    csvCell(formatDate(item.siteMgrDate)),
+                    item.mgrDays != null ? item.mgrDays : '',
+                    csvCell(item.apApprover),
+                    csvCell(formatDate(item.apApprovalDate)),
+                    item.apDays != null ? item.apDays : '',
+                    item.totalDays != null ? item.totalDays : '',
+                    csvCell(item.comments),
+                    csvCell(item.status)
+                ];
+                csv += row.join(',') + '\r\n';
+            });
+
+            var start = document.getElementById('startDate').value;
+            var end = document.getElementById('endDate').value;
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'AP_Productivity_Report_' + start + '_to_' + end + '.csv';
+            link.click();
+        }
+
+        function csvCell(val) {
+            if (val == null) return '';
+            var str = String(val);
+            if (str.indexOf(',') >= 0 || str.indexOf('"') >= 0 || str.indexOf('\n') >= 0) {
+                str = '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }
+    </script>
+
+</body>
+</html>

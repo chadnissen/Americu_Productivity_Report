@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings — Database Connections</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ef-font-family: 'Inter', ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+            --ef-text-24: 24px;
+            --ef-text-18: 18px;
+            --ef-text-14: 14px;
+            --ef-text-13: 13px;
+            --ef-text-12: 12px;
+            --ef-text: #1a1a1a;
+            --ef-text-secondary: #5c5c5c;
+            --ef-text-muted: #8a8a8a;
+            --ef-bg: #f5f5f5;
+            --ef-surface: #ffffff;
+            --ef-surface-2: #f9f9f9;
+            --ef-border: #e0e0e0;
+            --ef-primary: #2563eb;
+            --ef-primary-hover: #1d4ed8;
+            --ef-primary-text: #ffffff;
+            --ef-status-success: #16a34a;
+            --ef-status-danger: #dc2626;
+            --ef-space-4: 4px;
+            --ef-space-8: 8px;
+            --ef-space-12: 12px;
+            --ef-space-16: 16px;
+            --ef-space-24: 24px;
+            --ef-space-32: 32px;
+            --ef-radius-6: 6px;
+            --ef-radius-10: 10px;
+            --ef-shadow-1: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--ef-font-family);
+            font-size: var(--ef-text-14);
+            color: var(--ef-text);
+            background: var(--ef-bg);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page-header {
+            background: var(--ef-surface);
+            border-bottom: 1px solid var(--ef-border);
+            padding: var(--ef-space-16) var(--ef-space-32);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .page-header-left { display: flex; align-items: center; gap: var(--ef-space-12); }
+        .page-header h1 {
+            font-size: var(--ef-text-18);
+            font-weight: 600;
+            color: var(--ef-text);
+        }
+        .page-header .breadcrumb {
+            font-size: var(--ef-text-12);
+            color: var(--ef-text-muted);
+        }
+        .page-header .breadcrumb a {
+            color: var(--ef-primary);
+            text-decoration: none;
+        }
+        .page-header .breadcrumb a:hover { text-decoration: underline; }
+
+        .page-body {
+            padding: var(--ef-space-24) var(--ef-space-32);
+            max-width: 1100px;
+        }
+
+        .cards-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--ef-space-24);
+            margin-bottom: var(--ef-space-24);
+        }
+
+        .card {
+            background: var(--ef-surface);
+            border: 1px solid var(--ef-border);
+            border-radius: var(--ef-radius-10);
+            box-shadow: var(--ef-shadow-1);
+            padding: var(--ef-space-24);
+        }
+        .card-title {
+            font-size: var(--ef-text-14);
+            font-weight: 600;
+            color: var(--ef-text);
+            margin-bottom: var(--ef-space-16);
+            padding-bottom: var(--ef-space-12);
+            border-bottom: 1px solid var(--ef-border);
+        }
+
+        .form-group {
+            margin-bottom: var(--ef-space-12);
+        }
+        .form-group label {
+            display: block;
+            font-size: var(--ef-text-12);
+            font-weight: 500;
+            color: var(--ef-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: var(--ef-space-4);
+        }
+        .form-group input {
+            font-family: var(--ef-font-family);
+            font-size: var(--ef-text-13);
+            color: var(--ef-text);
+            background: var(--ef-surface);
+            border: 1px solid var(--ef-border);
+            border-radius: var(--ef-radius-6);
+            padding: var(--ef-space-8) var(--ef-space-12);
+            width: 100%;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .form-group input:focus {
+            border-color: var(--ef-primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        }
+
+        .btn {
+            font-family: var(--ef-font-family);
+            font-size: var(--ef-text-13);
+            font-weight: 500;
+            border: none;
+            border-radius: var(--ef-radius-6);
+            padding: var(--ef-space-8) var(--ef-space-16);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--ef-space-8);
+            transition: background 0.15s;
+            outline: none;
+        }
+        .btn-primary {
+            background: var(--ef-primary);
+            color: var(--ef-primary-text);
+        }
+        .btn-primary:hover { background: var(--ef-primary-hover); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary {
+            background: var(--ef-surface);
+            color: var(--ef-text);
+            border: 1px solid var(--ef-border);
+        }
+        .btn-secondary:hover { background: var(--ef-surface-2); }
+
+        .test-result {
+            margin-top: var(--ef-space-8);
+            font-size: var(--ef-text-12);
+            min-height: 20px;
+        }
+        .test-result.success { color: var(--ef-status-success); font-weight: 500; }
+        .test-result.error { color: var(--ef-status-danger); font-weight: 500; }
+
+        .save-row {
+            display: flex;
+            align-items: center;
+            gap: var(--ef-space-16);
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--ef-surface);
+            border: 1px solid var(--ef-border);
+            border-radius: var(--ef-radius-10);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            padding: var(--ef-space-12) var(--ef-space-24);
+            font-size: var(--ef-text-13);
+            font-weight: 500;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.success { border-left: 4px solid var(--ef-status-success); color: var(--ef-status-success); }
+        .toast.error { border-left: 4px solid var(--ef-status-danger); color: var(--ef-status-danger); }
+    </style>
+</head>
+<body>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <div>
+                <div class="breadcrumb"><a href="/">Reports</a> &nbsp;/&nbsp; <a href="/">AP Specialist Productivity</a> &nbsp;/&nbsp; Settings</div>
+                <h1>Database Connections</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+
+        <div class="cards-row">
+            <!-- Workflow Database -->
+            <div class="card">
+                <div class="card-title">Workflow Database</div>
+                <div class="form-group">
+                    <label>Server</label>
+                    <input type="text" id="wfServer" placeholder="e.g. sql-server.domain.com">
+                </div>
+                <div class="form-group">
+                    <label>Database</label>
+                    <input type="text" id="wfDatabase" placeholder="e.g. ECMTWF_v4">
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="wfUsername" placeholder="e.g. sysop">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="wfPassword" placeholder="Enter password">
+                </div>
+                <button class="btn btn-secondary" onclick="testConnection('wf')">Test Connection</button>
+                <div class="test-result" id="wfTestResult"></div>
+            </div>
+
+            <!-- AppEnhancer Database -->
+            <div class="card">
+                <div class="card-title">AppEnhancer Database</div>
+                <div class="form-group">
+                    <label>Server</label>
+                    <input type="text" id="aeServer" placeholder="e.g. sql-server.domain.com">
+                </div>
+                <div class="form-group">
+                    <label>Database</label>
+                    <input type="text" id="aeDatabase" placeholder="e.g. AEDemo25from22">
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="aeUsername" placeholder="e.g. sysop">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="aePassword" placeholder="Enter password">
+                </div>
+                <button class="btn btn-secondary" onclick="testConnection('ae')">Test Connection</button>
+                <div class="test-result" id="aeTestResult"></div>
+            </div>
+        </div>
+
+        <div class="save-row">
+            <button class="btn btn-primary" id="saveBtn" onclick="saveSettings()">Save Settings</button>
+            <a href="/" style="color: var(--ef-primary); font-size: var(--ef-text-13); text-decoration: none;">Back to Report</a>
+        </div>
+
+    </div>
+
+    <script>
+        // ── Load existing settings on page load ─────────────────────────
+        document.addEventListener('DOMContentLoaded', loadCurrentSettings);
+
+        async function loadCurrentSettings() {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+
+                if (data.configured) {
+                    if (data.workflow) {
+                        document.getElementById('wfServer').value = data.workflow.server || '';
+                        document.getElementById('wfDatabase').value = data.workflow.database || '';
+                        document.getElementById('wfUsername').value = data.workflow.username || '';
+                        if (data.workflow.hasPassword) {
+                            document.getElementById('wfPassword').placeholder = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+                        }
+                    }
+                    if (data.appEnhancer) {
+                        document.getElementById('aeServer').value = data.appEnhancer.server || '';
+                        document.getElementById('aeDatabase').value = data.appEnhancer.database || '';
+                        document.getElementById('aeUsername').value = data.appEnhancer.username || '';
+                        if (data.appEnhancer.hasPassword) {
+                            document.getElementById('aePassword').placeholder = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load settings:', e);
+            }
+        }
+
+        // ── Test Connection ─────────────────────────────────────────────
+        async function testConnection(prefix) {
+            var server, database, username, password, resultEl;
+
+            if (prefix === 'wf') {
+                server = document.getElementById('wfServer').value;
+                database = document.getElementById('wfDatabase').value;
+                username = document.getElementById('wfUsername').value;
+                password = document.getElementById('wfPassword').value;
+                resultEl = document.getElementById('wfTestResult');
+            } else {
+                server = document.getElementById('aeServer').value;
+                database = document.getElementById('aeDatabase').value;
+                username = document.getElementById('aeUsername').value;
+                password = document.getElementById('aePassword').value;
+                resultEl = document.getElementById('aeTestResult');
+            }
+
+            if (!server || !database || !username || !password) {
+                resultEl.className = 'test-result error';
+                resultEl.textContent = 'Please fill in all fields including password.';
+                return;
+            }
+
+            resultEl.className = 'test-result';
+            resultEl.textContent = 'Testing...';
+
+            try {
+                const res = await fetch('/api/settings/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ server, database, username, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    resultEl.className = 'test-result success';
+                    resultEl.textContent = data.message;
+                } else {
+                    resultEl.className = 'test-result error';
+                    resultEl.textContent = data.message;
+                }
+            } catch (e) {
+                resultEl.className = 'test-result error';
+                resultEl.textContent = 'Request failed: ' + e.message;
+            }
+        }
+
+        // ── Save Settings ───────────────────────────────────────────────
+        async function saveSettings() {
+            var btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            var body = {
+                workflow: {
+                    server: document.getElementById('wfServer').value,
+                    database: document.getElementById('wfDatabase').value,
+                    username: document.getElementById('wfUsername').value,
+                    password: document.getElementById('wfPassword').value || null
+                },
+                appEnhancer: {
+                    server: document.getElementById('aeServer').value,
+                    database: document.getElementById('aeDatabase').value,
+                    username: document.getElementById('aeUsername').value,
+                    password: document.getElementById('aePassword').value || null
+                }
+            };
+
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Settings saved successfully.', 'success');
+                    // Update password placeholders
+                    if (body.workflow.password) {
+                        document.getElementById('wfPassword').value = '';
+                        document.getElementById('wfPassword').placeholder = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+                    }
+                    if (body.appEnhancer.password) {
+                        document.getElementById('aePassword').value = '';
+                        document.getElementById('aePassword').placeholder = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+                    }
+                } else {
+                    showToast('Failed to save: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (e) {
+                showToast('Request failed: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Settings';
+            }
+        }
+
+        // ── Toast notification ──────────────────────────────────────────
+        function showToast(message, type) {
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+    </script>
+
+</body>
+</html>
