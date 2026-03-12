@@ -3,6 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Set base href so relative URLs resolve correctly under IIS sub-applications
+        (function() {
+            var p = window.location.pathname;
+            var dir = p.substring(0, p.lastIndexOf('/') + 1);
+            var b = document.createElement('base');
+            b.href = dir;
+            document.head.appendChild(b);
+        })();
+    </script>
     <title>Settings — Database Connections</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -262,7 +272,7 @@
     <div class="page-header">
         <div class="page-header-left">
             <div>
-                <div class="breadcrumb"><a href="/">Reports</a> &nbsp;/&nbsp; <a href="/">AP Specialist Productivity</a> &nbsp;/&nbsp; Settings</div>
+                <div class="breadcrumb"><a href="./">Reports</a> &nbsp;/&nbsp; <a href="./">AP Specialist Productivity</a> &nbsp;/&nbsp; Settings</div>
                 <h1>Database Connections</h1>
             </div>
         </div>
@@ -320,7 +330,7 @@
 
         <div class="save-row">
             <button class="btn btn-primary" id="saveBtn" onclick="saveSettings()">Save Settings</button>
-            <a href="/" style="color: var(--ef-primary); font-size: var(--ef-text-13); text-decoration: none;">Back to Report</a>
+            <a href="./" style="color: var(--ef-primary); font-size: var(--ef-text-13); text-decoration: none;">Back to Report</a>
         </div>
 
         <!-- Workflow Configuration Section (appears after WF connection test succeeds) -->
@@ -433,7 +443,7 @@
 
         async function loadCurrentSettings() {
             try {
-                const res = await fetch('/api/settings');
+                const res = await fetch('api/settings');
                 const data = await res.json();
 
                 if (data.configured) {
@@ -489,7 +499,7 @@
             resultEl.textContent = 'Testing...';
 
             try {
-                const res = await fetch('/api/settings/test', {
+                const res = await fetch('api/settings/test', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ server, database, username, password })
@@ -535,7 +545,7 @@
             };
 
             try {
-                const res = await fetch('/api/settings', {
+                const res = await fetch('api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
@@ -591,7 +601,7 @@
 
         async function loadWorkflowList() {
             try {
-                var res = await fetch('/api/workflows');
+                var res = await fetch('api/workflows');
                 if (!res.ok) return;
                 var data = await res.json();
                 if (data.error) return;
@@ -617,9 +627,9 @@
 
             try {
                 var [fieldsRes, queuesRes, mappingRes] = await Promise.all([
-                    fetch('/api/workflows/' + wfId + '/fields'),
-                    fetch('/api/workflows/' + wfId + '/queues'),
-                    fetch('/api/settings/workflow-mapping/' + wfId)
+                    fetch('api/workflows/' + wfId + '/fields'),
+                    fetch('api/workflows/' + wfId + '/queues'),
+                    fetch('api/settings/workflow-mapping/' + wfId)
                 ]);
 
                 wfFields = await fieldsRes.json();
@@ -798,7 +808,7 @@
             btn.textContent = 'Saving...';
 
             try {
-                var res = await fetch('/api/settings/workflow-mapping/' + wfId, {
+                var res = await fetch('api/settings/workflow-mapping/' + wfId, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -828,7 +838,7 @@
 
         async function loadAuthSettings() {
             try {
-                var res = await fetch('/api/settings/auth');
+                var res = await fetch('api/settings/auth');
                 var data = await res.json();
                 adGroups = data.allowedAdGroups || [];
                 renderAdGroups();
@@ -881,7 +891,7 @@
         async function searchAdGroups(query) {
             var panel = document.getElementById('groupSearchResults');
             try {
-                var res = await fetch('/api/settings/auth/browse-groups?q=' + encodeURIComponent(query));
+                var res = await fetch('api/settings/auth/browse-groups?q=' + encodeURIComponent(query));
                 var data = await res.json();
 
                 if (data.message && (!data.groups || data.groups.length === 0)) {
@@ -945,7 +955,7 @@
 
         async function saveAuthSettings() {
             try {
-                var res = await fetch('/api/settings/auth', {
+                var res = await fetch('api/settings/auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ allowedAdGroups: adGroups })
@@ -972,7 +982,7 @@
             if (!confirm('Remove the mapping for "' + wfName + '"?\n\nThis workflow will no longer appear in the report dropdown.')) return;
 
             try {
-                var res = await fetch('/api/settings/workflow-mapping/' + wfId, { method: 'DELETE' });
+                var res = await fetch('api/settings/workflow-mapping/' + wfId, { method: 'DELETE' });
                 var data = await res.json();
 
                 if (data.success) {

@@ -91,7 +91,7 @@ SqlConnection GetWfConnection()
 {
     var settings = LoadSettings();
     if (settings?.Workflow == null)
-        throw new InvalidOperationException("Database connections not configured. Visit /settings.html to set up.");
+        throw new InvalidOperationException("Database connections not configured. Visit settings.html to set up.");
     var conn = new SqlConnection(BuildConnectionString(settings.Workflow));
     conn.Open();
     return conn;

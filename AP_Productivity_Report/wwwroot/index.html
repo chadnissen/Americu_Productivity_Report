@@ -3,6 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Set base href so relative URLs (settings.html, api/*) resolve correctly
+        // when hosted under an IIS sub-application (e.g. /WorkflowReport)
+        (function() {
+            var p = window.location.pathname;
+            // If path doesn't end with / or a file extension, it's a directory without trailing slash
+            if (!p.endsWith('/') && p.lastIndexOf('.') <= p.lastIndexOf('/')) p += '/';
+            // Get directory portion
+            var dir = p.substring(0, p.lastIndexOf('/') + 1);
+            var b = document.createElement('base');
+            b.href = dir;
+            document.head.appendChild(b);
+        })();
+    </script>
     <title>AP Specialist Productivity Report — ECMToolbox Workflow</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -452,7 +466,7 @@
         </div>
         <div class="page-header-right">
             <span id="userDisplay" style="font-size: var(--ef-text-12); color: var(--ef-text-muted);"></span>
-            <a href="/settings.html" class="settings-link" title="Settings">
+            <a href="settings.html" class="settings-link" title="Settings">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"/>
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -465,7 +479,7 @@
 
         <!-- Config Banner (shown when DB not configured) -->
         <div class="config-banner hidden" id="configBanner">
-            Database connections not configured. <a href="/settings.html">Click here to set up database connections</a> before running reports.
+            Database connections not configured. <a href="settings.html">Click here to set up database connections</a> before running reports.
         </div>
 
         <!-- Filter Bar -->
@@ -626,7 +640,7 @@
         // ── Load user info ──────────────────────────────────────────────
         async function loadUserInfo() {
             try {
-                var res = await fetch('/api/auth/me');
+                var res = await fetch('api/auth/me');
                 var data = await res.json();
                 if (data.displayName) {
                     document.getElementById('userDisplay').textContent = data.displayName;
@@ -637,7 +651,7 @@
         // ── Check if DB is configured ────────────────────────────────────
         async function checkSettings() {
             try {
-                const res = await fetch('/api/settings');
+                const res = await fetch('api/settings');
                 const data = await res.json();
                 if (!data.configured) {
                     document.getElementById('configBanner').classList.remove('hidden');
@@ -651,7 +665,7 @@
         // ── Load workflows dropdown ───────────────────────────────────────
         async function loadWorkflows() {
             try {
-                const res = await fetch('/api/workflows');
+                const res = await fetch('api/workflows');
                 const workflows = await res.json();
                 if (workflows.error) {
                     console.error('Workflows error:', workflows.error);
@@ -754,7 +768,7 @@
             tbody.innerHTML = '<tr><td colspan="15" class="empty-state"><span class="loading-spinner"></span> Loading data from database...</td></tr>';
 
             try {
-                var url = '/api/reports/ap-productivity?workflowId=' + encodeURIComponent(workflowId)
+                var url = 'api/reports/ap-productivity?workflowId=' + encodeURIComponent(workflowId)
                     + '&start=' + encodeURIComponent(start)
                     + '&end=' + encodeURIComponent(end)
                     + '&dateBasis=' + encodeURIComponent(dateBasis);
