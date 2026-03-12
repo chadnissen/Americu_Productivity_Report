@@ -27,13 +27,17 @@ Built on .NET 8 Minimal API with the EasyFile design system.
 - **SLA Color Coding** — Green (0–3 days), Yellow (4–30 days), Red (31+ days) on all timing columns
 - **KPI Summary Strip** — Total Invoices, Total Dollar Value, Unique Processors, Unique Vendors, Avg Processing Days
 - **Flexible Date Filtering** — Presets (MTD, QTD, YTD, Last Month, Last Quarter) or custom date range
-- **Date Basis Toggle** — Filter by System Created Date or Invoice Date
-- **Workflow Selector** — Dropdown to switch between different workflows
+- **Date Basis Toggle** — Filter by System Created Date, Invoice Date, Site Mgr Approval Date, or AP Approval Date
+- **Dynamic Workflow Mapping** — Configure field and queue mappings per workflow in the settings UI, no code changes needed
+- **Smart Workflow Selector** — Only shows configured workflows; hidden entirely if only one is configured
+- **Client-Side Filters** — Filter by Processor or Status (Completed/In Progress) without additional database queries
+- **Windows Authentication** — SSO via Negotiate (Kerberos/NTLM), seamless for domain-joined machines
+- **AD Group Access Control** — Restrict report access to specific Active Directory groups with LDAP browsing
 - **Sortable Columns** — Click any column header to sort ascending/descending
 - **Pagination** — 25 items per page with full navigation
 - **CSV Export** — UTF-8 with BOM, Excel-compatible, exports all sorted data
 - **Encrypted Configuration** — Database credentials encrypted with Windows DPAPI
-- **Zero-Install Deployment** — Self-contained .exe or IIS-hosted
+- **Zero-Install Deployment** — Self-contained .exe requires no prerequisites on the target machine
 
 ---
 
@@ -42,22 +46,27 @@ Built on .NET 8 Minimal API with the EasyFile design system.
 ### Standalone (.exe) Deployment
 - Windows 10/11 or Windows Server 2016+
 - Network access to the SQL Server databases
-- No additional software required
+- **No .NET installation required** — the runtime is embedded in the .exe
 
 ### IIS Deployment
 - Windows Server with IIS enabled
-- [.NET 8 Hosting Bundle](https://dotnet.microsoft.com/download/dotnet/8.0) installed
+- [.NET 8 Hosting Bundle](https://dotnet.microsoft.com/download/dotnet/8.0) installed (includes ASP.NET Core Runtime + IIS module)
 - Network access to the SQL Server databases
 
+### Windows Authentication (Optional)
+- Machine must be domain-joined (or Azure AD hybrid-joined) for SSO
+- AD group-based access control requires the app to be able to query Active Directory (LDAP)
+- If no AD groups are configured, all authenticated Windows users have access (bootstrap mode)
+
 ### Database Access
-The application connects to two SQL Server databases:
+The application connects to up to two SQL Server databases:
 
-| Connection | Purpose |
-|------------|---------|
-| **Workflow Database** | ECMT Workflow data — workflows, work items, instances, queues, users |
-| **AppEnhancer Database** | Document index data — invoice metadata, vendor details |
+| Connection | Purpose | Required? |
+|------------|---------|-----------|
+| **Workflow Database** | ECMT Workflow data — workflows, work items, instances, queues, users | Yes |
+| **AppEnhancer Database** | Document index data — invoice metadata, vendor details | Optional |
 
-A SQL login with read access to both databases is required.
+A SQL login with read access to the Workflow database is required.
 
 ---
 
@@ -65,29 +74,40 @@ A SQL login with read access to both databases is required.
 
 ### Option 1: Standalone Executable (Recommended for evaluation)
 
-No installation required. A single self-contained `.exe` that includes the .NET runtime.
+No installation required. A single self-contained `.exe` that includes the .NET 8 runtime.
 
 **To build:**
 ```
 cd AP_Productivity_Report
-publish.bat
+dotnet publish -c Release -o ./publish
 ```
 
 **Output:** `publish/AP_Productivity_Report.exe` (~100MB, self-contained)
 
-**To deploy:** Copy the entire `publish/` folder to the target machine.
+**To deploy:** Copy the entire `publish/` folder to the target machine. No .NET install needed.
 
 ### Option 2: IIS (Recommended for production)
 
-Requires the .NET 8 Hosting Bundle on the server. Much smaller deployment (~5MB).
+Requires the [.NET 8 Hosting Bundle](https://dotnet.microsoft.com/download/dotnet/8.0) on the server. Much smaller deployment (~5MB).
+
+**Important:** IIS does not support single-file deployments. You must override the csproj defaults:
 
 **To build:**
 ```
 cd AP_Productivity_Report
-dotnet publish -c Release -o ./publish-iis
+dotnet publish -c Release -o ./publish-iis -p:PublishSingleFile=false -p:SelfContained=false
 ```
 
 See [IIS Deployment](#iis-deployment) for setup instructions.
+
+### Comparison
+
+| | Standalone .exe | IIS |
+|---|---|---|
+| .NET install required | No | .NET 8 Hosting Bundle |
+| Deployment size | ~100MB | ~5MB |
+| Windows Auth | Supported | Supported |
+| Best for | Evaluation, single-user | Production, multi-user |
 
 ---
 
@@ -95,10 +115,11 @@ See [IIS Deployment](#iis-deployment) for setup instructions.
 
 1. Copy the `publish/` folder to the target machine
 2. Double-click `AP_Productivity_Report.exe`
-3. A browser window opens to `http://localhost:5000`
-4. On first run, you are prompted to configure database connections
-5. Enter credentials, click **Test Connection**, then **Save**
-6. The report loads automatically
+3. Open a browser to `http://localhost:5000`
+4. On first run, you are redirected to configure database connections
+5. Enter credentials, click **Test Connection** (auto-saves on success)
+6. Configure workflow field and queue mappings
+7. The report loads automatically
 
 ---
 
@@ -110,9 +131,9 @@ See [IIS Deployment](#iis-deployment) for setup instructions.
 
 ### Steps
 
-1. **Publish** the application:
+1. **Publish** the application (single-file must be disabled for IIS):
    ```
-   dotnet publish -c Release -o ./publish-iis
+   dotnet publish -c Release -o ./publish-iis -p:PublishSingleFile=false -p:SelfContained=false
    ```
 
 2. **Copy** the `publish-iis/` folder to the IIS server (e.g., `C:\inetpub\APProductivityReport\`)
@@ -129,12 +150,19 @@ See [IIS Deployment](#iis-deployment) for setup instructions.
    - Set **.NET CLR Version** to **No Managed Code**
    - Set **Identity** to a service account that has network access to the SQL Server databases
 
-5. **Browse** to `http://servername:8080` and configure database connections
+5. **Enable Windows Authentication (recommended):**
+   - In IIS Manager, select the site
+   - Open **Authentication**
+   - Enable **Windows Authentication**
+   - Disable **Anonymous Authentication**
+
+6. **Browse** to `http://servername:8080` and configure database connections
 
 ### Notes
 - The `web.config` file included in the publish output configures the ASP.NET Core Module automatically
 - Database passwords are encrypted using Windows DPAPI and are tied to the user account running the application pool
 - If you change the application pool identity, you will need to re-enter database passwords
+- Windows Auth SSO works automatically for users on the same domain — no separate login needed
 
 ---
 
@@ -142,11 +170,9 @@ See [IIS Deployment](#iis-deployment) for setup instructions.
 
 On first launch (or by clicking the gear icon in the report header), you will see the **Settings** page.
 
-### Database Connections
+### 1. Database Connections
 
-Configure two connections:
-
-#### Workflow Database
+#### Workflow Database (Required)
 | Field | Description | Example |
 |-------|-------------|---------|
 | Server | SQL Server hostname or IP | `sql-prod-01.ad.contoso.com` |
@@ -154,7 +180,7 @@ Configure two connections:
 | Username | SQL login username | `reportuser` |
 | Password | SQL login password | `••••••••` |
 
-#### AppEnhancer Database
+#### AppEnhancer Database (Optional)
 | Field | Description | Example |
 |-------|-------------|---------|
 | Server | SQL Server hostname or IP | `sql-prod-01.ad.contoso.com` |
@@ -162,11 +188,50 @@ Configure two connections:
 | Username | SQL login username | `reportuser` |
 | Password | SQL login password | `••••••••` |
 
-### Test Connection
-Click **Test Connection** for each database to verify connectivity before saving. A green success message confirms the connection works.
+Click **Test Connection** to verify connectivity. A successful test auto-saves the connection settings. Passwords are encrypted using Windows DPAPI and stored in `connections.json` alongside the application.
 
-### Save
-Click **Save Settings** to encrypt and store the credentials. Passwords are encrypted using Windows DPAPI and stored in `connections.json` alongside the application. The encrypted passwords can only be decrypted on the same machine by the same user account.
+### 2. Workflow Configuration
+
+After a successful Workflow DB connection, the **Workflow Configuration** section appears.
+
+#### Field Mappings
+Select a workflow from the dropdown. The application reads all available fields from `wf_WorkflowFields` and presents them in dropdowns. Map each report field to the correct workflow column:
+
+| Report Field | Required? | Description |
+|---|---|---|
+| Vendor Name | Yes | The vendor/supplier name field |
+| Invoice Number | Yes | The invoice number field |
+| Amount | Yes | The invoice dollar amount field |
+| Invoice Date | Yes | The date on the invoice |
+| DocID | No | Links to AppEnhancer document |
+| Workflow Status | No | Current status text |
+| Workflow Queue | No | Current queue name |
+
+The application auto-detects likely matches based on field names. Review and adjust as needed.
+
+#### Queue Role Mappings
+Each queue in the workflow is listed with a role dropdown:
+
+| Role | Meaning |
+|---|---|
+| Not used | Queue is not relevant to this report |
+| First Approval | Site Manager / first-level approval step |
+| Second Approval | Senior / AP approval step |
+
+The application auto-detects approval queues by name patterns (e.g., "APPROVAL", "SENIOR").
+
+Click **Save Workflow Mapping** to store. Use **Remove Mapping** to unconfigure a workflow.
+
+### 3. Access Control (Optional)
+
+Configure which AD groups can access the report:
+
+- Type to search Active Directory groups (LDAP lookup, 2+ characters)
+- Click a result to add the group
+- Click X on a tag to remove a group
+- Click **Save Access Control**
+
+**Bootstrap mode:** When no AD groups are configured, all authenticated Windows users have access. Once at least one group is added, only members of those groups can access the report.
 
 ---
 
@@ -176,12 +241,14 @@ Click **Save Settings** to encrypt and store the credentials. Passwords are encr
 
 | Control | Description |
 |---------|-------------|
-| **Workflow** | Select which workflow to report on. Each workflow corresponds to a set of work items and approval queues. |
+| **Workflow** | Select which workflow to report on. Only configured workflows appear. Hidden if only one is configured. |
 | **Preset** | Quick date range selection: Month to Date, Quarter to Date, Year to Date, Last Month, Last Quarter, or Custom. |
 | **Start Date / End Date** | Custom date range. Automatically set by presets. |
-| **Date Basis** | Filter by **System Created Date** (when the invoice entered the workflow) or **Invoice Date** (the date on the invoice). Default: System Created Date. |
+| **Date Basis** | Filter by **System Created Date**, **Invoice Date**, **Site Mgr Approval Date**, or **AP Approval Date**. |
+| **Processor** | Client-side filter — select a specific AP specialist (no database round-trip). |
+| **Status** | Client-side filter — All, Completed, or In Progress (no database round-trip). |
 
-Click **Run Report** to execute the query and load results.
+Click **Run Report** to execute the query and load results. Filter selections are saved in localStorage and restored on next visit.
 
 ### KPI Summary Strip
 
@@ -250,19 +317,27 @@ Click **Export CSV** to download all filtered and sorted data as a CSV file. The
 │  - EasyFile Design System       │
 │  - Vanilla JavaScript           │
 │  - Client-side sort/pagination  │
+│  - Client-side filter/export    │
 └──────────┬──────────────────────┘
-           │ HTTP (JSON)
+           │ HTTP (JSON) + Negotiate Auth
 ┌──────────▼──────────────────────┐
 │  .NET 8 Minimal API             │
+│  - Windows Authentication       │
+│  - AD Group Authorization       │
+│  - DPAPI Password Encryption    │
+│  - Dynamic Workflow Mapping     │
+│  - /api/auth/me                 │
 │  - /api/workflows               │
 │  - /api/reports/ap-productivity │
 │  - /api/settings                │
+│  - /api/settings/workflow-*     │
+│  - /api/settings/auth/*         │
 │  - Static file serving          │
 └──────┬──────────┬───────────────┘
        │          │
 ┌──────▼───┐ ┌───▼──────────┐
 │ Workflow │ │ AppEnhancer  │
-│    DB    │ │     DB       │
+│    DB    │ │  DB (opt.)   │
 │ (SQL)    │ │   (SQL)      │
 └──────────┘ └──────────────┘
 ```
@@ -271,25 +346,33 @@ Click **Export CSV** to download all filtered and sorted data as a CSV file. The
 
 | File | Purpose |
 |------|---------|
-| `Program.cs` | .NET 8 minimal API — all endpoints, SQL queries, encryption |
+| `Program.cs` | .NET 8 minimal API — all endpoints, SQL queries, auth, encryption, workflow mapping |
 | `wwwroot/index.html` | Report page — filters, KPIs, table, sorting, pagination, CSV export |
-| `wwwroot/settings.html` | Database connection configuration page |
+| `wwwroot/settings.html` | Settings page — DB connections, workflow mapping, access control |
 | `appsettings.json` | ASP.NET configuration (logging, etc.) |
-| `publish.bat` | Build script for self-contained .exe |
 | `web.config` | IIS hosting configuration (auto-generated on publish) |
-| `connections.json` | Encrypted database credentials (created on first save, not in source control) |
+| `connections.json` | Encrypted settings (DB credentials, workflow mappings, AD groups — created on first save, not in source control) |
 
 ### API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/` | Serves the report page |
-| GET | `/settings.html` | Serves the settings page |
-| GET | `/api/settings` | Returns connection config (no passwords) |
+| GET | `/` | Serves the report page (checks authorization) |
+| GET | `/settings.html` | Serves the settings page (checks authorization) |
+| GET | `/api/auth/me` | Returns current user identity and display name |
+| GET | `/api/settings` | Returns connection config (no passwords) and configured workflow list |
 | POST | `/api/settings` | Saves encrypted connection settings |
 | POST | `/api/settings/test` | Tests a database connection |
-| GET | `/api/workflows` | Returns all workflows for the dropdown |
-| GET | `/api/reports/ap-productivity` | Main report query with filters |
+| GET | `/api/settings/auth` | Returns configured AD groups |
+| POST | `/api/settings/auth` | Saves AD group access list |
+| GET | `/api/settings/auth/browse-groups?q=` | LDAP search for AD groups |
+| GET | `/api/workflows` | Returns all workflows from the database |
+| GET | `/api/workflows/{id}/fields` | Returns field definitions for a workflow |
+| GET | `/api/workflows/{id}/queues` | Returns queue definitions for a workflow |
+| GET | `/api/settings/workflow-mapping/{id}` | Returns saved field/queue mapping for a workflow |
+| POST | `/api/settings/workflow-mapping/{id}` | Saves field/queue mapping for a workflow |
+| DELETE | `/api/settings/workflow-mapping/{id}` | Removes a workflow mapping |
+| GET | `/api/reports/ap-productivity` | Main report query with date, workflow, and date-basis filters |
 
 ---
 
@@ -300,34 +383,19 @@ Click **Export CSV** to download all filtered and sorted data as a CSV file. The
 | Table | Description |
 |-------|-------------|
 | `wf_Workflows` | Workflow definitions — ID, name, integration settings |
+| `wf_WorkflowFields` | Field definitions per workflow — field name, column mapping |
 | `wf_WorkItems_{id}` | Work items per workflow — invoice fields, timestamps, completion |
 | `wf_WorkInstances_{id}` | Queue step instances — owner, start/end times, notes |
 | `wf_Queues` | Queue definitions — names, workflow paths |
 | `wf_Users` | User accounts — ID, username, full name |
 
-### Key Field Mappings (Workflow 7 — AP DEMO)
+### Dynamic Field Mappings
 
-| WorkItem Column | Field Name |
-|-----------------|------------|
-| f14 | Vendor Name |
-| f15 | Invoice Number |
-| f16 | Amount |
-| f24 | Invoice Date |
-| f11 | DocID (links to AppEnhancer) |
-| f18 | Workflow Status |
-| f19 | Workflow Queue |
+Field-to-column mappings are configured per workflow in the settings UI. The application reads available fields from `wf_WorkflowFields` and lets the administrator map them to report columns. No hardcoded field assumptions.
 
-### Queue Mappings (Workflow 7)
+### Dynamic Queue Mappings
 
-| QueueID | Queue Name |
-|---------|------------|
-| 4 | 10 - BATCH INDEXING |
-| 5 | 15 - BATCH INDEX ROUTING |
-| 0 | 20 - Invoice Review |
-| 6 | 30 - INVOICE APPROVAL |
-| 1 | 30 - APPROVAL |
-| 2 | SENIOR APPROVER |
-| 7 | 40 - APPROVED |
+Queue roles (First Approval, Second Approval) are configured per workflow in the settings UI. The application reads available queues from `wf_Queues` and lets the administrator assign roles. No hardcoded queue ID assumptions.
 
 ---
 
@@ -346,17 +414,23 @@ Visit `/settings.html` (click the gear icon) and enter your database credentials
 DPAPI encryption is tied to the Windows user account. If you change the app pool identity, revisit `/settings.html` and re-enter passwords.
 
 ### No data returned
-- Verify the correct workflow is selected in the dropdown
+- Verify the correct workflow is selected (or configured in settings)
 - Try expanding the date range (select "Year to Date" or a wider custom range)
+- Check that field and queue mappings are configured for the selected workflow
 - Check that the workflow has work items in the `wf_WorkItems_{id}` table
 
-### Large "Total Dollar Value"
-Test/demo databases may contain unrealistic invoice amounts. This is expected in non-production environments.
+### "Access Denied"
+- Your Windows account is not a member of any configured AD group
+- Ask an administrator to add your AD group in Settings > Access Control
+- If no groups are configured (bootstrap mode), all authenticated users should have access
 
 ### Application won't start (standalone .exe)
 - Ensure no other process is using port 5000
 - Run from a command prompt to see error output: `AP_Productivity_Report.exe`
 - Check that `wwwroot/` folder is present alongside the .exe
+
+### Large "Total Dollar Value"
+Test/demo databases may contain unrealistic invoice amounts. This is expected in non-production environments.
 
 ### CSV opens with garbled characters in Excel
 The CSV includes a UTF-8 BOM. If Excel still shows incorrect characters, use **Data > From Text/CSV** import instead of double-clicking the file.
