@@ -117,7 +117,6 @@
 
         .page-body {
             padding: var(--ef-space-24) var(--ef-space-32);
-            max-width: 1400px;
         }
 
         /* ===================================================
@@ -293,6 +292,8 @@
         }
         .table-wrap {
             overflow-x: auto;
+            overflow-y: auto;
+            max-height: 65vh;
         }
         table {
             width: 100%;
@@ -312,7 +313,9 @@
             white-space: nowrap;
             cursor: pointer;
             user-select: none;
-            position: relative;
+            position: sticky;
+            top: 0;
+            z-index: 2;
         }
         thead th:hover { color: var(--ef-text); }
         thead th .sort-icon {
@@ -448,6 +451,7 @@
             </div>
         </div>
         <div class="page-header-right">
+            <span id="userDisplay" style="font-size: var(--ef-text-12); color: var(--ef-text-muted);"></span>
             <a href="/settings.html" class="settings-link" title="Settings">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"/>
@@ -466,7 +470,7 @@
 
         <!-- Filter Bar -->
         <div class="filter-bar">
-            <div class="filter-group">
+            <div class="filter-group" id="workflowGroup">
                 <label>Workflow</label>
                 <select id="workflowSelect">
                     <option value="7">Loading...</option>
@@ -496,6 +500,22 @@
                 <select id="dateBasis">
                     <option value="system" selected>System Created Date</option>
                     <option value="invoice">Invoice Date</option>
+                    <option value="siteMgrApproval">Site Mgr Approval Date</option>
+                    <option value="apApproval">AP Approval Date</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Processor</label>
+                <select id="processorFilter">
+                    <option value="">All Processors</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Status</label>
+                <select id="statusFilter">
+                    <option value="">All</option>
+                    <option value="Completed">Completed</option>
+                    <option value="In Progress">In Progress</option>
                 </select>
             </div>
             <div class="filter-actions">
@@ -582,18 +602,37 @@
     <script>
         // ── State ─────────────────────────────────────────────────────────
         let reportData = [];       // full items array from API
+        let filteredData = [];     // after client-side filters (processor, status)
         let sortedData = [];       // after sorting
         let currentPage = 1;
         const pageSize = 25;
         let sortKey = null;
         let sortDir = 'asc';
+        let configuredWorkflowIds = [];
 
         // ── Init ──────────────────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            loadUserInfo();
+            restoreFilters();
             applyPresetDates();
-            checkSettings();
+            await checkSettings();
             loadWorkflows();
+
+            // Client-side filters re-filter without hitting the DB
+            document.getElementById('processorFilter').addEventListener('change', applyClientFilters);
+            document.getElementById('statusFilter').addEventListener('change', applyClientFilters);
         });
+
+        // ── Load user info ──────────────────────────────────────────────
+        async function loadUserInfo() {
+            try {
+                var res = await fetch('/api/auth/me');
+                var data = await res.json();
+                if (data.displayName) {
+                    document.getElementById('userDisplay').textContent = data.displayName;
+                }
+            } catch (e) { /* auth endpoint may not be available */ }
+        }
 
         // ── Check if DB is configured ────────────────────────────────────
         async function checkSettings() {
@@ -603,6 +642,7 @@
                 if (!data.configured) {
                     document.getElementById('configBanner').classList.remove('hidden');
                 }
+                configuredWorkflowIds = data.configuredWorkflows || [];
             } catch (e) {
                 // Ignore — settings endpoint might not be reachable
             }
@@ -620,15 +660,37 @@
                     runReport();
                     return;
                 }
+
+                // Filter to only configured workflows if any are configured
+                var displayWorkflows = workflows;
+                if (configuredWorkflowIds.length > 0) {
+                    displayWorkflows = workflows.filter(function(wf) {
+                        return configuredWorkflowIds.indexOf(wf.workflowId) >= 0;
+                    });
+                    // Fallback to all if filter produced nothing
+                    if (displayWorkflows.length === 0) displayWorkflows = workflows;
+                }
+
                 const sel = document.getElementById('workflowSelect');
                 sel.innerHTML = '';
-                workflows.forEach(function(wf) {
+                displayWorkflows.forEach(function(wf) {
                     const opt = document.createElement('option');
                     opt.value = wf.workflowId;
                     opt.textContent = wf.workflowId + ' - ' + wf.workflowName;
-                    if (wf.workflowId === 7) opt.selected = true;
                     sel.appendChild(opt);
                 });
+
+                // Restore saved workflow selection
+                var savedWf = localStorage.getItem('ap_report_workflow');
+                if (savedWf && sel.querySelector('option[value="' + savedWf + '"]')) {
+                    sel.value = savedWf;
+                }
+
+                // Hide workflow dropdown if only one configured workflow
+                if (displayWorkflows.length <= 1) {
+                    document.getElementById('workflowGroup').style.display = 'none';
+                }
+
                 // Auto-run report after workflows load
                 runReport();
             } catch (e) {
@@ -706,9 +768,17 @@
                 }
 
                 reportData = data.items || [];
-                sortedData = reportData.slice();
                 sortKey = null;
                 currentPage = 1;
+
+                // Populate processor dropdown from results
+                populateProcessorFilter(reportData);
+
+                // Apply client-side filters
+                applyClientFilters();
+
+                // Save filter state
+                saveFilters();
 
                 // Update KPIs
                 var s = data.summary || {};
@@ -926,6 +996,88 @@
                 return '<span class="badge badge-warning">In Progress</span>';
             }
             return '<span class="badge badge-info">' + escapeHtml(status) + '</span>';
+        }
+
+        // ── Client-side filters (Processor, Status) ─────────────────────
+        function populateProcessorFilter(items) {
+            var sel = document.getElementById('processorFilter');
+            var currentVal = sel.value;
+            var processors = [];
+            var seen = {};
+            items.forEach(function(item) {
+                var p = item.apProcessor || '';
+                if (p && !seen[p]) {
+                    seen[p] = true;
+                    processors.push(p);
+                }
+            });
+            processors.sort();
+
+            sel.innerHTML = '<option value="">All Processors</option>';
+            processors.forEach(function(p) {
+                var opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                sel.appendChild(opt);
+            });
+            // Restore previous selection if still valid
+            if (currentVal && sel.querySelector('option[value="' + CSS.escape(currentVal) + '"]')) {
+                sel.value = currentVal;
+            }
+        }
+
+        function applyClientFilters() {
+            var processor = document.getElementById('processorFilter').value;
+            var status = document.getElementById('statusFilter').value;
+
+            filteredData = reportData.filter(function(item) {
+                if (processor && item.apProcessor !== processor) return false;
+                if (status && item.status !== status) return false;
+                return true;
+            });
+
+            sortedData = filteredData.slice();
+
+            // Re-apply current sort
+            if (sortKey) {
+                var th = document.querySelector('thead th[data-key="' + sortKey + '"]');
+                if (th) {
+                    var type = th.getAttribute('data-type');
+                    sortedData.sort(function(a, b) {
+                        var va = a[sortKey];
+                        var vb = b[sortKey];
+                        if (va == null && vb == null) return 0;
+                        if (va == null) return 1;
+                        if (vb == null) return -1;
+                        if (type === 'number') { va = parseFloat(va) || 0; vb = parseFloat(vb) || 0; }
+                        else if (type === 'date') { va = va || ''; vb = vb || ''; }
+                        else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); }
+                        var cmp = va < vb ? -1 : va > vb ? 1 : 0;
+                        return sortDir === 'asc' ? cmp : -cmp;
+                    });
+                }
+            }
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        // ── Save/Restore filter state ───────────────────────────────────
+        function saveFilters() {
+            try {
+                localStorage.setItem('ap_report_workflow', document.getElementById('workflowSelect').value);
+                localStorage.setItem('ap_report_preset', document.getElementById('preset').value);
+                localStorage.setItem('ap_report_dateBasis', document.getElementById('dateBasis').value);
+            } catch (e) { /* localStorage might be unavailable */ }
+        }
+
+        function restoreFilters() {
+            try {
+                var preset = localStorage.getItem('ap_report_preset');
+                var dateBasis = localStorage.getItem('ap_report_dateBasis');
+                if (preset) document.getElementById('preset').value = preset;
+                if (dateBasis) document.getElementById('dateBasis').value = dateBasis;
+            } catch (e) { /* ignore */ }
         }
 
         // ── CSV Export ────────────────────────────────────────────────────
