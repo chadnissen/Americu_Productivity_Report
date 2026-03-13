@@ -70,7 +70,7 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: var(--ef-font-family);
-            font-size: var(--ef-text-14);
+            font-size: var(--ef-text-13);
             color: var(--ef-text);
             background: var(--ef-bg);
             line-height: 1.5;
@@ -83,7 +83,7 @@
         .page-header {
             background: var(--ef-surface);
             border-bottom: 1px solid var(--ef-border);
-            padding: var(--ef-space-16) var(--ef-space-32);
+            padding: 10px var(--ef-space-24);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -130,7 +130,7 @@
         }
 
         .page-body {
-            padding: var(--ef-space-24) var(--ef-space-32);
+            padding: var(--ef-space-16) var(--ef-space-24);
         }
 
         /* ===================================================
@@ -140,8 +140,8 @@
             background: #fef3c7;
             border: 1px solid #f59e0b;
             border-radius: var(--ef-radius-10);
-            padding: var(--ef-space-12) var(--ef-space-24);
-            margin-bottom: var(--ef-space-24);
+            padding: var(--ef-space-8) var(--ef-space-16);
+            margin-bottom: var(--ef-space-16);
             display: flex;
             align-items: center;
             gap: var(--ef-space-12);
@@ -162,20 +162,20 @@
             border: 1px solid var(--ef-border);
             border-radius: var(--ef-radius-10);
             box-shadow: var(--ef-shadow-1);
-            padding: var(--ef-space-16) var(--ef-space-24);
+            padding: 10px var(--ef-space-16);
             display: flex;
             align-items: flex-end;
-            gap: var(--ef-space-16);
+            gap: var(--ef-space-12);
             flex-wrap: wrap;
-            margin-bottom: var(--ef-space-24);
+            margin-bottom: var(--ef-space-16);
         }
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: var(--ef-space-4);
+            gap: 3px;
         }
         .filter-group label {
-            font-size: var(--ef-text-12);
+            font-size: 10px;
             font-weight: 500;
             color: var(--ef-text-secondary);
             text-transform: uppercase;
@@ -184,13 +184,13 @@
         .filter-group input[type="date"],
         .filter-group select {
             font-family: var(--ef-font-family);
-            font-size: var(--ef-text-13);
+            font-size: var(--ef-text-12);
             color: var(--ef-text);
             background: var(--ef-surface);
             border: 1px solid var(--ef-border);
             border-radius: var(--ef-radius-6);
-            padding: var(--ef-space-8) var(--ef-space-12);
-            min-width: 160px;
+            padding: 6px 10px;
+            min-width: 130px;
             outline: none;
             transition: border-color 0.15s;
         }
@@ -210,15 +210,15 @@
            =================================================== */
         .btn {
             font-family: var(--ef-font-family);
-            font-size: var(--ef-text-13);
+            font-size: var(--ef-text-12);
             font-weight: 500;
             border: none;
             border-radius: var(--ef-radius-6);
-            padding: var(--ef-space-8) var(--ef-space-16);
+            padding: 7px 14px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: var(--ef-space-8);
+            gap: 6px;
             transition: background 0.15s, box-shadow 0.15s;
             outline: none;
         }
@@ -240,7 +240,7 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-        .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+        .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
         /* ===================================================
            Summary Strip (KPI Cards)
@@ -248,35 +248,121 @@
         .summary-strip {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: var(--ef-space-16);
-            margin-bottom: var(--ef-space-24);
+            gap: var(--ef-space-12);
+            margin-bottom: var(--ef-space-16);
         }
         .kpi-card {
             background: var(--ef-surface);
             border: 1px solid var(--ef-border);
             border-radius: var(--ef-radius-10);
             box-shadow: var(--ef-shadow-1);
-            padding: var(--ef-space-16);
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            gap: var(--ef-space-4);
+            gap: 1px;
         }
         .kpi-card .kpi-label {
-            font-size: var(--ef-text-12);
+            font-size: 10px;
             font-weight: 500;
             color: var(--ef-text-muted);
             text-transform: uppercase;
             letter-spacing: 0.03em;
         }
         .kpi-card .kpi-value {
-            font-size: var(--ef-text-24);
+            font-size: var(--ef-text-18);
             font-weight: 600;
             color: var(--ef-text);
         }
         .kpi-card .kpi-sub {
-            font-size: var(--ef-text-12);
+            font-size: 10px;
             color: var(--ef-text-muted);
         }
+
+        /* ===================================================
+           Rollup Summary Tables
+           =================================================== */
+        .section-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: var(--ef-space-16);
+            margin-bottom: var(--ef-space-16);
+        }
+        .section-card {
+            background: var(--ef-surface);
+            border: 1px solid var(--ef-border);
+            border-radius: var(--ef-radius-10);
+            box-shadow: var(--ef-shadow-1);
+            overflow: hidden;
+        }
+        .section-card-header {
+            padding: var(--ef-space-8) var(--ef-space-12);
+            border-bottom: 1px solid var(--ef-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .section-card-title { font-size: var(--ef-text-12); font-weight: 600; color: var(--ef-text); }
+        .section-card-count { font-size: var(--ef-text-12); color: var(--ef-text-muted); }
+
+        .rollup-table { width: 100%; border-collapse: collapse; }
+        .rollup-table th {
+            padding: var(--ef-space-4) var(--ef-space-8);
+            font-size: 9.5px;
+            font-weight: 600;
+            color: var(--ef-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            background: var(--ef-surface-2);
+            border-bottom: 1px solid var(--ef-border);
+            text-align: left;
+            white-space: nowrap;
+        }
+        .rollup-table td {
+            padding: var(--ef-space-4) var(--ef-space-8);
+            font-size: 11px;
+            border-bottom: 1px solid var(--ef-border);
+            white-space: nowrap;
+        }
+        .rollup-table tbody tr { transition: background 0.1s; cursor: pointer; }
+        .rollup-table tbody tr:hover { background: #f0f7ff; }
+        .rollup-table tbody tr:last-child td { border-bottom: none; }
+        .rollup-table td.number { text-align: right; font-variant-numeric: tabular-nums; }
+        .rollup-table td.currency { text-align: right; font-variant-numeric: tabular-nums; }
+        .rollup-table tfoot td {
+            font-weight: 700;
+            font-size: 11px;
+            border-top: 2px solid var(--ef-border);
+            background: var(--ef-surface-2);
+            border-bottom: none;
+        }
+        .rollup-table tbody tr.active-row { background: #e8f0fe; }
+
+        .filter-banner {
+            display: none;
+            background: #e8f0fe;
+            border: 1px solid #bfdbfe;
+            border-radius: var(--ef-radius-6);
+            padding: var(--ef-space-8) 14px;
+            margin-bottom: var(--ef-space-12);
+            font-size: var(--ef-text-12);
+            color: var(--ef-primary);
+            align-items: center;
+            justify-content: space-between;
+        }
+        .filter-banner.active { display: flex; }
+        .filter-banner strong { font-weight: 600; }
+        .clear-filter {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--ef-primary);
+            background: none;
+            border: none;
+            font-family: var(--ef-font-family);
+            font-size: var(--ef-text-12);
+            padding: 2px var(--ef-space-8);
+            border-radius: var(--ef-radius-6);
+        }
+        .clear-filter:hover { background: #dbeafe; }
 
         /* ===================================================
            Results Table
@@ -289,38 +375,38 @@
             overflow: hidden;
         }
         .results-header {
-            padding: var(--ef-space-12) var(--ef-space-24);
+            padding: var(--ef-space-8) var(--ef-space-16);
             border-bottom: 1px solid var(--ef-border);
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
         .results-header .results-title {
-            font-size: var(--ef-text-14);
+            font-size: var(--ef-text-13);
             font-weight: 600;
             color: var(--ef-text);
         }
         .results-header .results-count {
-            font-size: var(--ef-text-12);
+            font-size: 11px;
             color: var(--ef-text-muted);
         }
         .table-wrap {
             overflow-x: auto;
             overflow-y: auto;
-            max-height: 65vh;
+            max-height: 520px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: var(--ef-text-13);
+            font-size: 11px;
         }
         thead th {
             background: var(--ef-surface-2);
             border-bottom: 2px solid var(--ef-border);
-            padding: var(--ef-space-8) var(--ef-space-12);
+            padding: 5px 6px;
             text-align: left;
             font-weight: 600;
-            font-size: var(--ef-text-12);
+            font-size: 10px;
             color: var(--ef-text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.03em;
@@ -345,20 +431,20 @@
         }
         tbody tr:hover { background: var(--ef-surface-2); }
         tbody td {
-            padding: var(--ef-space-8) var(--ef-space-12);
+            padding: 5px 6px;
             color: var(--ef-text);
             white-space: nowrap;
         }
-        tbody td.wrap { white-space: normal; max-width: 200px; }
+        tbody td.wrap { white-space: normal; max-width: 120px; font-size: 10.5px; }
         tbody td.currency { text-align: right; font-variant-numeric: tabular-nums; }
         tbody td.number { text-align: right; font-variant-numeric: tabular-nums; }
 
         /* Status badge */
         .badge {
             display: inline-block;
-            font-size: var(--ef-text-12);
+            font-size: 10px;
             font-weight: 500;
-            padding: 2px var(--ef-space-8);
+            padding: 1px 6px;
             border-radius: 999px;
             line-height: 1.5;
         }
@@ -388,12 +474,12 @@
            Pagination
            =================================================== */
         .results-footer {
-            padding: var(--ef-space-12) var(--ef-space-24);
+            padding: var(--ef-space-8) var(--ef-space-16);
             border-top: 1px solid var(--ef-border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: var(--ef-text-12);
+            font-size: 11px;
             color: var(--ef-text-muted);
         }
         .pagination {
@@ -402,12 +488,12 @@
         }
         .pagination button {
             font-family: var(--ef-font-family);
-            font-size: var(--ef-text-12);
+            font-size: 11px;
             font-weight: 500;
             background: var(--ef-surface);
             border: 1px solid var(--ef-border);
             border-radius: var(--ef-radius-6);
-            padding: var(--ef-space-4) var(--ef-space-8);
+            padding: 3px 6px;
             cursor: pointer;
             color: var(--ef-text-secondary);
             min-width: 32px;
@@ -573,6 +659,15 @@
             </div>
         </div>
 
+        <!-- Rollup Summary Tables -->
+        <div class="section-row" id="rollupRow" style="display:none;"></div>
+
+        <!-- Filter Banner (shown when rollup row clicked) -->
+        <div class="filter-banner" id="filterBanner">
+            <span>Filtered: <strong id="filterLabel"></strong></span>
+            <button class="clear-filter" onclick="clearRollupFilter()">&#10005; Clear Filter</button>
+        </div>
+
         <!-- Results Table -->
         <div class="results-card">
             <div class="results-header">
@@ -623,6 +718,8 @@
         let sortKey = null;
         let sortDir = 'asc';
         let configuredWorkflowIds = [];
+        let rollupFilterType = null;
+        let rollupFilterValue = null;
 
         // ── Init ──────────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', async function() {
@@ -785,6 +882,14 @@
                 sortKey = null;
                 currentPage = 1;
 
+                // Clear any rollup filter from previous run
+                rollupFilterType = null;
+                rollupFilterValue = null;
+                document.getElementById('filterBanner').classList.remove('active');
+
+                // Build rollup summary tables
+                buildRollupTables(reportData);
+
                 // Populate processor dropdown from results
                 populateProcessorFilter(reportData);
 
@@ -809,14 +914,15 @@
                 document.getElementById('exportBtn').disabled = reportData.length === 0;
 
                 // Clear sort indicators
-                document.querySelectorAll('thead th').forEach(function(th) {
+                document.querySelectorAll('#reportTable thead th').forEach(function(th) {
                     th.classList.remove('sorted');
-                    th.querySelector('.sort-icon').innerHTML = '&#9650;&#9660;';
+                    var icon = th.querySelector('.sort-icon');
+                    if (icon) icon.innerHTML = '&#9650;&#9660;';
                 });
 
                 renderTable();
             } catch (e) {
-                tbody.innerHTML = '<tr><td colspan="15" class="empty-state">Failed to connect to server. Make sure the application is running.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="15" class="empty-state">Error: ' + escapeHtml(e.message || String(e)) + '</td></tr>';
                 console.error('Report error:', e);
             } finally {
                 btn.disabled = false;
@@ -930,9 +1036,10 @@
             }
 
             // Update header indicators
-            document.querySelectorAll('thead th').forEach(function(h) {
+            document.querySelectorAll('#reportTable thead th').forEach(function(h) {
                 h.classList.remove('sorted');
-                h.querySelector('.sort-icon').innerHTML = '&#9650;&#9660;';
+                var icon = h.querySelector('.sort-icon');
+                if (icon) icon.innerHTML = '&#9650;&#9660;';
             });
             th.classList.add('sorted');
             th.querySelector('.sort-icon').innerHTML = sortDir === 'asc' ? '&#9650;' : '&#9660;';
@@ -1047,6 +1154,29 @@
             filteredData = reportData.filter(function(item) {
                 if (processor && item.apProcessor !== processor) return false;
                 if (status && item.status !== status) return false;
+
+                // Rollup filter (additive with dropdown filters)
+                if (rollupFilterType && rollupFilterValue) {
+                    switch (rollupFilterType) {
+                        case 'processor':
+                            if ((item.apProcessor || '(Unknown)') !== rollupFilterValue) return false;
+                            break;
+                        case 'sitemgr':
+                            if ((item.siteMgrApprover || '(Unassigned)') !== rollupFilterValue) return false;
+                            break;
+                        case 'aging':
+                            if (item.status === 'Completed') return false;
+                            var days = item.totalDays || 0;
+                            switch (rollupFilterValue) {
+                                case '0-3': if (days < 0 || days > 3) return false; break;
+                                case '4-7': if (days < 4 || days > 7) return false; break;
+                                case '8-14': if (days < 8 || days > 14) return false; break;
+                                case '15-30': if (days < 15 || days > 30) return false; break;
+                                case '31+': if (days < 31) return false; break;
+                            }
+                            break;
+                    }
+                }
                 return true;
             });
 
@@ -1072,8 +1202,37 @@
                 }
             }
 
+            // Update KPIs to reflect filtered subset if any filter is active
+            updateKPIsForSubset(filteredData);
+
             currentPage = 1;
             renderTable();
+        }
+
+        function updateKPIsForSubset(items) {
+            var hasRollupFilter = rollupFilterType && rollupFilterValue;
+            var hasDropdownFilter = document.getElementById('processorFilter').value || document.getElementById('statusFilter').value;
+
+            if (!hasRollupFilter && !hasDropdownFilter) {
+                // No client filter active — KPIs already set from API summary
+                return;
+            }
+
+            var totalInv = items.length;
+            var totalDol = items.reduce(function(s, r) { return s + (r.amount || 0); }, 0);
+            var procs = {}, vends = {};
+            items.forEach(function(r) {
+                if (r.apProcessor) procs[r.apProcessor] = true;
+                if (r.vendorName) vends[r.vendorName] = true;
+            });
+            var completed = items.filter(function(r) { return r.status === 'Completed' && r.totalDays != null; });
+            var avgDays = completed.length ? (completed.reduce(function(s, r) { return s + r.totalDays; }, 0) / completed.length).toFixed(1) : '--';
+
+            document.getElementById('kpiTotal').textContent = totalInv.toLocaleString();
+            document.getElementById('kpiDollars').textContent = '$' + totalDol.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('kpiProcessors').textContent = Object.keys(procs).length.toLocaleString();
+            document.getElementById('kpiVendors').textContent = Object.keys(vends).length.toLocaleString();
+            document.getElementById('kpiDays').textContent = avgDays;
         }
 
         // ── Save/Restore filter state ───────────────────────────────────
@@ -1144,6 +1303,148 @@
                 str = '"' + str.replace(/"/g, '""') + '"';
             }
             return str;
+        }
+
+        // ── Rollup Summary Tables ────────────────────────────────────────
+        function slaClass(days) {
+            if (days <= 3) return 'sla-green';
+            if (days <= 30) return 'sla-yellow';
+            return 'sla-red';
+        }
+
+        function buildRollupTables(items) {
+            var rollupRow = document.getElementById('rollupRow');
+            if (!items || items.length === 0) {
+                rollupRow.style.display = 'none';
+                return;
+            }
+            rollupRow.style.display = '';
+
+            // ── By AP Specialist ──
+            var apMap = {};
+            items.forEach(function(r) {
+                var name = r.apProcessor || '(Unknown)';
+                if (!apMap[name]) apMap[name] = { count: 0, open: 0, totalDaysSum: 0, completedCount: 0 };
+                var a = apMap[name];
+                a.count++;
+                if (r.status !== 'Completed') {
+                    a.open++;
+                } else {
+                    if (r.totalDays != null) { a.totalDaysSum += r.totalDays; a.completedCount++; }
+                }
+            });
+            var apRows = Object.entries(apMap).sort(function(a, b) { return b[1].count - a[1].count; });
+            var totalOpen = 0, totalCompDays = 0, totalCompCount = 0;
+            apRows.forEach(function(e) { totalOpen += e[1].open; totalCompDays += e[1].totalDaysSum; totalCompCount += e[1].completedCount; });
+            var overallAvg = totalCompCount ? (totalCompDays / totalCompCount).toFixed(1) : '--';
+
+            var apHTML = '<div class="section-card"><div class="section-card-header"><span class="section-card-title">By AP Specialist</span><span class="section-card-count">' + apRows.length + ' specialists</span></div>';
+            apHTML += '<table class="rollup-table"><thead><tr><th>Name</th><th style="text-align:right">Invoices</th><th style="text-align:right">Avg Days</th><th style="text-align:right">Open</th></tr></thead><tbody>';
+            apRows.forEach(function(entry) {
+                var name = entry[0], d = entry[1];
+                var avg = d.completedCount ? (d.totalDaysSum / d.completedCount).toFixed(1) : '--';
+                var cls = avg !== '--' ? slaClass(parseFloat(avg)) : '';
+                apHTML += '<tr data-filter-type="processor" data-filter-value="' + escapeHtml(name) + '" onclick="filterFromRollup(this)"><td>' + escapeHtml(name) + '</td><td class="number">' + d.count + '</td><td class="number"><span class="' + cls + '">' + avg + '</span></td><td class="number">' + d.open + '</td></tr>';
+            });
+            apHTML += '</tbody><tfoot><tr><td>Total</td><td class="number">' + items.length + '</td><td class="number">' + overallAvg + '</td><td class="number">' + totalOpen + '</td></tr></tfoot></table></div>';
+
+            // ── By Site Manager ──
+            var mgrMap = {};
+            items.forEach(function(r) {
+                var name = r.siteMgrApprover || '(Unassigned)';
+                if (!mgrMap[name]) mgrMap[name] = { assigned: 0, pending: 0, daysSum: 0, approvedCount: 0, slaCount: 0 };
+                var m = mgrMap[name];
+                m.assigned++;
+                if (r.siteMgrDate) {
+                    m.approvedCount++;
+                    if (r.mgrDays != null) { m.daysSum += r.mgrDays; if (r.mgrDays <= 3) m.slaCount++; }
+                } else if (r.status !== 'Completed') {
+                    m.pending++;
+                }
+            });
+            var mgrRows = Object.entries(mgrMap).sort(function(a, b) { return b[1].assigned - a[1].assigned; });
+            var mTotalPending = 0, mTotalApproved = 0, mTotalSla = 0, mTotalDays = 0;
+            mgrRows.forEach(function(e) { mTotalPending += e[1].pending; mTotalApproved += e[1].approvedCount; mTotalSla += e[1].slaCount; mTotalDays += e[1].daysSum; });
+            var mOverallAvg = mTotalApproved ? (mTotalDays / mTotalApproved).toFixed(1) : '--';
+            var mOverallSla = mTotalApproved ? Math.round(mTotalSla / mTotalApproved * 100) + '%' : '--';
+
+            var mgrHTML = '<div class="section-card"><div class="section-card-header"><span class="section-card-title">By Site Manager</span><span class="section-card-count">' + mgrRows.length + ' managers</span></div>';
+            mgrHTML += '<table class="rollup-table"><thead><tr><th>Name</th><th style="text-align:right">Assigned</th><th style="text-align:right">Avg Days</th><th style="text-align:right">Pending</th><th style="text-align:right">SLA %</th></tr></thead><tbody>';
+            mgrRows.forEach(function(entry) {
+                var name = entry[0], d = entry[1];
+                var avg = d.approvedCount ? (d.daysSum / d.approvedCount).toFixed(1) : '--';
+                var cls = avg !== '--' ? slaClass(parseFloat(avg)) : '';
+                var slaPct = d.approvedCount ? Math.round(d.slaCount / d.approvedCount * 100) + '%' : '--';
+                var slaCls = slaPct !== '--' ? (parseInt(slaPct) >= 85 ? 'sla-green' : parseInt(slaPct) >= 70 ? 'sla-yellow' : 'sla-red') : '';
+                mgrHTML += '<tr data-filter-type="sitemgr" data-filter-value="' + escapeHtml(name) + '" onclick="filterFromRollup(this)"><td>' + escapeHtml(name) + '</td><td class="number">' + d.assigned + '</td><td class="number"><span class="' + cls + '">' + avg + '</span></td><td class="number">' + d.pending + '</td><td class="number"><span class="' + slaCls + '">' + slaPct + '</span></td></tr>';
+            });
+            mgrHTML += '</tbody><tfoot><tr><td>Total</td><td class="number">' + items.length + '</td><td class="number">' + mOverallAvg + '</td><td class="number">' + mTotalPending + '</td><td class="number">' + mOverallSla + '</td></tr></tfoot></table></div>';
+
+            // ── Aging Summary (in-progress only) ──
+            var inProgress = items.filter(function(r) { return r.status !== 'Completed'; });
+            var buckets = [
+                { label: '0\u20133 days', min: 0, max: 3, key: '0-3', cls: 'sla-green' },
+                { label: '4\u20137 days', min: 4, max: 7, key: '4-7', cls: 'sla-yellow' },
+                { label: '8\u201314 days', min: 8, max: 14, key: '8-14', cls: 'sla-yellow' },
+                { label: '15\u201330 days', min: 15, max: 30, key: '15-30', cls: 'sla-yellow' },
+                { label: '31+ days', min: 31, max: 999999, key: '31+', cls: 'sla-red' }
+            ];
+            var agingData = buckets.map(function(b) {
+                var matched = inProgress.filter(function(r) { return (r.totalDays || 0) >= b.min && (r.totalDays || 0) <= b.max; });
+                var atMgr = matched.filter(function(r) { return !r.siteMgrDate; }).length;
+                var dollarVal = matched.reduce(function(s, r) { return s + (r.amount || 0); }, 0);
+                return { label: b.label, key: b.key, cls: b.cls, count: matched.length, dollarVal: dollarVal, atMgr: atMgr };
+            });
+            var totalAgingDol = inProgress.reduce(function(s, r) { return s + (r.amount || 0); }, 0);
+            var totalAtMgr = inProgress.filter(function(r) { return !r.siteMgrDate; }).length;
+
+            var agingHTML = '<div class="section-card"><div class="section-card-header"><span class="section-card-title">Aging Summary</span><span class="section-card-count">' + inProgress.length + ' in process</span></div>';
+            agingHTML += '<table class="rollup-table"><thead><tr><th>Age</th><th style="text-align:right">Count</th><th style="text-align:right">$ Value</th><th style="text-align:right">At Site Mgr</th></tr></thead><tbody>';
+            agingData.forEach(function(b) {
+                if (b.count > 0) {
+                    agingHTML += '<tr data-filter-type="aging" data-filter-value="' + b.key + '" onclick="filterFromRollup(this)"><td><span class="' + b.cls + '" style="font-weight:600">' + b.label + '</span></td><td class="number">' + b.count + '</td><td class="currency">' + formatCurrency(b.dollarVal) + '</td><td class="number">' + b.atMgr + '</td></tr>';
+                } else {
+                    agingHTML += '<tr style="opacity:0.4;cursor:default"><td><span class="' + b.cls + '" style="font-weight:600">' + b.label + '</span></td><td class="number">0</td><td class="currency">$0.00</td><td class="number">0</td></tr>';
+                }
+            });
+            agingHTML += '</tbody><tfoot><tr><td>Total</td><td class="number">' + inProgress.length + '</td><td class="currency">' + formatCurrency(totalAgingDol) + '</td><td class="number">' + totalAtMgr + '</td></tr></tfoot></table></div>';
+
+            rollupRow.innerHTML = apHTML + mgrHTML + agingHTML;
+        }
+
+        // ── Click-to-filter from rollup tables ──────────────────────────
+        function filterFromRollup(trEl) {
+            var type = trEl.getAttribute('data-filter-type');
+            var value = trEl.getAttribute('data-filter-value');
+            if (!type || !value) return;
+
+            // Highlight clicked row
+            document.querySelectorAll('.rollup-table tbody tr').forEach(function(r) { r.classList.remove('active-row'); });
+            trEl.classList.add('active-row');
+
+            rollupFilterType = type;
+            rollupFilterValue = value;
+
+            // Show filter banner
+            var label = '';
+            switch (type) {
+                case 'processor': label = 'AP Specialist: ' + value; break;
+                case 'sitemgr': label = 'Site Manager: ' + value; break;
+                case 'aging': label = 'Aging: ' + value.replace(/-/g, '\u2013') + ' days'; break;
+            }
+            document.getElementById('filterLabel').textContent = label;
+            document.getElementById('filterBanner').classList.add('active');
+
+            applyClientFilters();
+            document.querySelector('.results-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function clearRollupFilter() {
+            rollupFilterType = null;
+            rollupFilterValue = null;
+            document.querySelectorAll('.rollup-table tbody tr').forEach(function(r) { r.classList.remove('active-row'); });
+            document.getElementById('filterBanner').classList.remove('active');
+            applyClientFilters();
         }
     </script>
 
