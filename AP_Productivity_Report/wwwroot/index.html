@@ -893,19 +893,19 @@
                 // Populate processor dropdown from results
                 populateProcessorFilter(reportData);
 
-                // Apply client-side filters
-                applyClientFilters();
-
-                // Save filter state
-                saveFilters();
-
-                // Update KPIs
+                // Update KPIs from API summary first (baseline)
                 var s = data.summary || {};
                 document.getElementById('kpiTotal').textContent = (s.totalInvoices || 0).toLocaleString();
                 document.getElementById('kpiDollars').textContent = '$' + (s.totalDollars || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
                 document.getElementById('kpiProcessors').textContent = (s.uniqueProcessors || 0).toLocaleString();
                 document.getElementById('kpiVendors').textContent = (s.uniqueVendors || 0).toLocaleString();
                 document.getElementById('kpiDays').textContent = s.avgProcessingDays != null ? s.avgProcessingDays : '--';
+
+                // Apply client-side filters (may override KPIs if a filter is active)
+                applyClientFilters();
+
+                // Save filter state
+                saveFilters();
 
                 var startFmt = formatDisplayDate(start);
                 var endFmt = formatDisplayDate(end);
@@ -1339,7 +1339,7 @@
             var overallAvg = totalCompCount ? (totalCompDays / totalCompCount).toFixed(1) : '--';
 
             var apHTML = '<div class="section-card"><div class="section-card-header"><span class="section-card-title">By AP Specialist</span><span class="section-card-count">' + apRows.length + ' specialists</span></div>';
-            apHTML += '<table class="rollup-table"><thead><tr><th>Name</th><th style="text-align:right">Invoices</th><th style="text-align:right">Avg Days</th><th style="text-align:right">Open</th></tr></thead><tbody>';
+            apHTML += '<table class="rollup-table"><thead><tr><th>Name</th><th style="text-align:right">Invoices</th><th style="text-align:right">Avg Days</th><th style="text-align:right">In Progress</th></tr></thead><tbody>';
             apRows.forEach(function(entry) {
                 var name = entry[0], d = entry[1];
                 var avg = d.completedCount ? (d.totalDaysSum / d.completedCount).toFixed(1) : '--';
@@ -1369,7 +1369,7 @@
             var mOverallSla = mTotalApproved ? Math.round(mTotalSla / mTotalApproved * 100) + '%' : '--';
 
             var mgrHTML = '<div class="section-card"><div class="section-card-header"><span class="section-card-title">By Site Manager</span><span class="section-card-count">' + mgrRows.length + ' managers</span></div>';
-            mgrHTML += '<table class="rollup-table"><thead><tr><th>Name</th><th style="text-align:right">Assigned</th><th style="text-align:right">Avg Days</th><th style="text-align:right">Pending</th><th style="text-align:right">SLA %</th></tr></thead><tbody>';
+            mgrHTML += '<table class="rollup-table"><thead><tr><th>Name</th><th style="text-align:right">Assigned</th><th style="text-align:right">Avg Days</th><th style="text-align:right">In Progress</th><th style="text-align:right">SLA %</th></tr></thead><tbody>';
             mgrRows.forEach(function(entry) {
                 var name = entry[0], d = entry[1];
                 var avg = d.approvedCount ? (d.daysSum / d.approvedCount).toFixed(1) : '--';
