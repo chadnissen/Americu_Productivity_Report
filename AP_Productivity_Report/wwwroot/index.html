@@ -720,6 +720,7 @@
         let configuredWorkflowIds = [];
         let rollupFilterType = null;
         let rollupFilterValue = null;
+        let apiSummary = null;     // baseline KPIs from API (restored when all filters cleared)
 
         // ── Init ──────────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', async function() {
@@ -893,13 +894,9 @@
                 // Populate processor dropdown from results
                 populateProcessorFilter(reportData);
 
-                // Update KPIs from API summary first (baseline)
-                var s = data.summary || {};
-                document.getElementById('kpiTotal').textContent = (s.totalInvoices || 0).toLocaleString();
-                document.getElementById('kpiDollars').textContent = '$' + (s.totalDollars || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
-                document.getElementById('kpiProcessors').textContent = (s.uniqueProcessors || 0).toLocaleString();
-                document.getElementById('kpiVendors').textContent = (s.uniqueVendors || 0).toLocaleString();
-                document.getElementById('kpiDays').textContent = s.avgProcessingDays != null ? s.avgProcessingDays : '--';
+                // Cache and display API summary KPIs (baseline)
+                apiSummary = data.summary || {};
+                restoreBaselineKPIs();
 
                 // Apply client-side filters (may override KPIs if a filter is active)
                 applyClientFilters();
@@ -1209,12 +1206,23 @@
             renderTable();
         }
 
+        function restoreBaselineKPIs() {
+            if (!apiSummary) return;
+            var s = apiSummary;
+            document.getElementById('kpiTotal').textContent = (s.totalInvoices || 0).toLocaleString();
+            document.getElementById('kpiDollars').textContent = '$' + (s.totalDollars || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('kpiProcessors').textContent = (s.uniqueProcessors || 0).toLocaleString();
+            document.getElementById('kpiVendors').textContent = (s.uniqueVendors || 0).toLocaleString();
+            document.getElementById('kpiDays').textContent = s.avgProcessingDays != null ? s.avgProcessingDays : '--';
+        }
+
         function updateKPIsForSubset(items) {
             var hasRollupFilter = rollupFilterType && rollupFilterValue;
             var hasDropdownFilter = document.getElementById('processorFilter').value || document.getElementById('statusFilter').value;
 
             if (!hasRollupFilter && !hasDropdownFilter) {
-                // No client filter active — KPIs already set from API summary
+                // No client filter active — restore API baseline KPIs
+                restoreBaselineKPIs();
                 return;
             }
 

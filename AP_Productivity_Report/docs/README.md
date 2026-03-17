@@ -79,23 +79,21 @@ No installation required. A single self-contained `.exe` that includes the .NET 
 **To build:**
 ```
 cd AP_Productivity_Report
-dotnet publish -c Release -o ./publish
+dotnet publish -c Release -o ./publish-exe -r win-x64 -p:PublishSingleFile=true -p:SelfContained=true
 ```
 
-**Output:** `publish/AP_Productivity_Report.exe` (~100MB, self-contained)
+**Output:** `publish-exe/AP_Productivity_Report.exe` (~100MB, self-contained)
 
-**To deploy:** Copy the entire `publish/` folder to the target machine. No .NET install needed.
+**To deploy:** Copy the entire `publish-exe/` folder to the target machine. No .NET install needed.
 
 ### Option 2: IIS (Recommended for production)
 
-Requires the [.NET 8 Hosting Bundle](https://dotnet.microsoft.com/download/dotnet/8.0) on the server. Much smaller deployment (~5MB).
-
-**Important:** IIS does not support single-file deployments. You must override the csproj defaults:
+Requires the [.NET 8 Hosting Bundle](https://dotnet.microsoft.com/download/dotnet/8.0) on the server. Much smaller deployment (~19MB).
 
 **To build:**
 ```
 cd AP_Productivity_Report
-dotnet publish -c Release -o ./publish-iis -p:PublishSingleFile=false -p:SelfContained=false
+dotnet publish -c Release -o ./publish-iis
 ```
 
 See [IIS Deployment](#iis-deployment) for setup instructions.
@@ -105,7 +103,7 @@ See [IIS Deployment](#iis-deployment) for setup instructions.
 | | Standalone .exe | IIS |
 |---|---|---|
 | .NET install required | No | .NET 8 Hosting Bundle |
-| Deployment size | ~100MB | ~5MB |
+| Deployment size | ~100MB | ~19MB |
 | Windows Auth | Supported | Supported |
 | Best for | Evaluation, single-user | Production, multi-user |
 
@@ -113,7 +111,7 @@ See [IIS Deployment](#iis-deployment) for setup instructions.
 
 ## Quick Start (Standalone)
 
-1. Copy the `publish/` folder to the target machine
+1. Copy the `publish-exe/` folder to the target machine
 2. Double-click `AP_Productivity_Report.exe`
 3. Open a browser to `http://localhost:5000`
 4. On first run, you are redirected to configure database connections
@@ -131,9 +129,9 @@ See [IIS Deployment](#iis-deployment) for setup instructions.
 
 ### Steps
 
-1. **Publish** the application (single-file must be disabled for IIS):
+1. **Publish** the application:
    ```
-   dotnet publish -c Release -o ./publish-iis -p:PublishSingleFile=false -p:SelfContained=false
+   dotnet publish -c Release -o ./publish-iis
    ```
 
 2. **Copy** the `publish-iis/` folder to the IIS server (e.g., `C:\inetpub\APProductivityReport\`)

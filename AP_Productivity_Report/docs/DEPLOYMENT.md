@@ -19,7 +19,7 @@
 | | Standalone (.exe) | IIS |
 |---|---|---|
 | **Prerequisites** | None — .NET runtime is embedded | [.NET 8 Hosting Bundle](https://dotnet.microsoft.com/download/dotnet/8.0) |
-| **Deployment size** | ~100 MB | ~5 MB |
+| **Deployment size** | ~100 MB | ~19 MB |
 | **Windows Auth** | Supported | Supported |
 | **HTTPS** | Manual (reverse proxy or cert config) | IIS handles SSL binding |
 | **Runs as** | Current logged-in user | IIS Application Pool identity |
@@ -39,14 +39,14 @@
 
 ```
 cd AP_Productivity_Report
-dotnet publish -c Release -o ./publish
+dotnet publish -c Release -o ./publish-exe -r win-x64 -p:PublishSingleFile=true -p:SelfContained=true
 ```
 
-Output: `publish/AP_Productivity_Report.exe` (~100 MB, self-contained)
+Output: `publish-exe/AP_Productivity_Report.exe` (~100 MB, self-contained)
 
 ### Deploy
 
-1. Copy the entire `publish/` folder to the target machine
+1. Copy the entire `publish-exe/` folder to the target machine
 2. Double-click `AP_Productivity_Report.exe` (or run from command prompt)
 3. Open a browser to `http://localhost:5000`
 4. Complete [First-Run Configuration](#first-run-configuration)
@@ -76,11 +76,9 @@ Output: `publish/AP_Productivity_Report.exe` (~100 MB, self-contained)
 
 ### Build
 
-**Important:** IIS does not support single-file deployments. Override the project defaults:
-
 ```
 cd AP_Productivity_Report
-dotnet publish -c Release -o ./publish-iis -p:PublishSingleFile=false -p:SelfContained=false
+dotnet publish -c Release -o ./publish-iis
 ```
 
 ### Deploy as IIS Site (root)
@@ -243,14 +241,14 @@ See [AD Group Configuration](#ad-group-configuration) above.
 ### Standalone
 
 1. Stop the running .exe (close the console window or `taskkill`)
-2. Replace the `publish/` folder contents with the new build
+2. Replace the `publish-exe/` folder contents with the new build
 3. Restart the .exe
 
 `connections.json` is preserved — no need to reconfigure.
 
 ### IIS
 
-1. Build: `dotnet publish -c Release -o ./publish-iis -p:PublishSingleFile=false -p:SelfContained=false`
+1. Build: `dotnet publish -c Release -o ./publish-iis`
 2. Stop the IIS Application Pool (or use `app_offline.htm` for zero-downtime)
 3. Copy new `publish-iis/` contents to the site folder, overwriting existing files
 4. **Do not overwrite `connections.json`** — it contains your saved configuration
@@ -333,13 +331,19 @@ A dedicated audit log feature could be added to track:
 
 ## Troubleshooting
 
+### HTTP Error 500.31 — Failed to load ASP.NET Core runtime
+
+**Cause:** The .NET 8 Hosting Bundle is not installed, or IIS was not restarted after installation.
+
+**Fix:** Install the [.NET 8 Hosting Bundle](https://dotnet.microsoft.com/download/dotnet/8.0) and run `iisreset`.
+
 ### HTTP Error 500.38 — Failed to locate ASP.NET Core app
 
 **Cause:** The application was published as a single-file executable, which IIS cannot load in-process.
 
-**Fix:** Republish with single-file disabled:
+**Fix:** Republish for IIS without single-file:
 ```
-dotnet publish -c Release -o ./publish-iis -p:PublishSingleFile=false -p:SelfContained=false
+dotnet publish -c Release -o ./publish-iis
 ```
 
 ### HTTP Error 500.19 — Configuration Error
