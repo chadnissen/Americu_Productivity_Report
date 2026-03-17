@@ -388,7 +388,7 @@ app.MapGet("/api/workflows", () =>
     {
         using var conn = GetWfConnection();
         using var cmd = new SqlCommand(
-            "SELECT WorkflowID, WorkflowName, IntegrationSettings FROM wf_Workflows ORDER BY WorkflowID",
+            "SELECT WorkflowID, WorkflowName, IntegrationSettings FROM wf_Workflows WHERE IsEnabled = 1 ORDER BY WorkflowID",
             conn);
         using var reader = cmd.ExecuteReader();
 
