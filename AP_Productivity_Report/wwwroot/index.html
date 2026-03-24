@@ -1199,8 +1199,9 @@
                 }
             }
 
-            // Update KPIs to reflect filtered subset if any filter is active
+            // Update KPIs and rollups to reflect filtered subset
             updateKPIsForSubset(filteredData);
+            buildRollupTables(filteredData);
 
             currentPage = 1;
             renderTable();

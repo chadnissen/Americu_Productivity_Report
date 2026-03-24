@@ -498,11 +498,11 @@ app.MapPost("/api/settings/workflow-mapping/{id}", async (int id, HttpRequest re
             return Results.BadRequest(new { error = "Invalid request body" });
 
         // Validate column names to prevent SQL injection (must match f\d+ pattern)
-        var colPattern = new System.Text.RegularExpressions.Regex(@"^f\d+$");
+        var safeColPattern = new System.Text.RegularExpressions.Regex(@"^[A-Za-z_][A-Za-z0-9_]{0,127}$");
         foreach (var kv in body.FieldMappings)
         {
-            if (!colPattern.IsMatch(kv.Value))
-                return Results.BadRequest(new { error = $"Invalid column name '{kv.Value}'. Expected format: f1, f2, etc." });
+            if (!safeColPattern.IsMatch(kv.Value))
+                return Results.BadRequest(new { error = $"Invalid column name '{kv.Value}'. Column names must be valid identifiers." });
         }
 
         var settings = LoadSettings() ?? new ConnectionSettings();
@@ -553,38 +553,23 @@ app.MapDelete("/api/settings/workflow-mapping/{id}", async (int id) =>
 }).RequireAuthorization();
 
 // ── Column validation helper ─────────────────────────────────────────────
-var colPattern = new Regex(@"^f\d+$");
+var colPattern = new Regex(@"^[A-Za-z_][A-Za-z0-9_]{0,127}$");
 string SafeCol(string col, string fallback)
 {
-    return colPattern.IsMatch(col) ? col : fallback;
+    if (colPattern.IsMatch(col)) return $"[{col}]";
+    if (colPattern.IsMatch(fallback)) return $"[{fallback}]";
+    return "NULL";
 }
 
 // ── Default mappings (backward-compatible with Workflow 7) ───────────────
-WorkflowMapping GetMappingForWorkflow(int wfId)
+WorkflowMapping? GetMappingForWorkflow(int wfId)
 {
     var settings = LoadSettings();
     var key = wfId.ToString();
     if (settings?.WorkflowMappings != null && settings.WorkflowMappings.TryGetValue(key, out var mapping))
         return mapping;
 
-    // Fallback to Workflow 7 hardcoded defaults
-    return new WorkflowMapping
-    {
-        WorkflowId = wfId,
-        WorkflowName = "Default (Workflow 7)",
-        FieldMappings = new Dictionary<string, string>
-        {
-            ["VendorName"] = "f14",
-            ["InvoiceNumber"] = "f15",
-            ["Amount"] = "f16",
-            ["InvoiceDate"] = "f24",
-            ["DocID"] = "f11",
-            ["WorkflowStatus"] = "f18",
-            ["WorkflowQueue"] = "f19"
-        },
-        SiteMgrQueueIds = new List<int> { 1, 6 },
-        SeniorApprovalQueueIds = new List<int> { 2 }
-    };
+    return null;
 }
 
 // GET /api/reports/ap-productivity — Main report endpoint
@@ -604,13 +589,24 @@ app.MapGet("/api/reports/ap-productivity", (HttpRequest request) =>
 
     // Load dynamic field/queue mapping
     var mapping = GetMappingForWorkflow(wfIdInt);
-    var fVendor = SafeCol(mapping.FieldMappings.GetValueOrDefault("VendorName", "f14"), "f14");
-    var fInvNum = SafeCol(mapping.FieldMappings.GetValueOrDefault("InvoiceNumber", "f15"), "f15");
-    var fAmount = SafeCol(mapping.FieldMappings.GetValueOrDefault("Amount", "f16"), "f16");
-    var fInvDate = SafeCol(mapping.FieldMappings.GetValueOrDefault("InvoiceDate", "f24"), "f24");
-    var fDocId = SafeCol(mapping.FieldMappings.GetValueOrDefault("DocID", "f11"), "f11");
-    var fStatus = SafeCol(mapping.FieldMappings.GetValueOrDefault("WorkflowStatus", "f18"), "f18");
-    var fQueue = SafeCol(mapping.FieldMappings.GetValueOrDefault("WorkflowQueue", "f19"), "f19");
+    if (mapping == null)
+        return Results.Json(new { error = "No field mapping configured for this workflow. Please configure it in Settings > Workflow Field Mapping." }, jsonOpts, statusCode: 400);
+
+    var requiredMappings = new[] { "VendorName", "InvoiceNumber", "Amount", "InvoiceDate" };
+    var missingMappings = requiredMappings.Where(k => !mapping.FieldMappings.ContainsKey(k) || string.IsNullOrEmpty(mapping.FieldMappings[k])).ToList();
+    if (missingMappings.Count > 0)
+        return Results.Json(new { error = $"Workflow mapping is incomplete. Missing: {string.Join(", ", missingMappings)}. Please update it in Settings." }, jsonOpts, statusCode: 400);
+
+    var fVendor = SafeCol(mapping.FieldMappings["VendorName"], "");
+    var fInvNum = SafeCol(mapping.FieldMappings["InvoiceNumber"], "");
+    var fAmount = SafeCol(mapping.FieldMappings["Amount"], "");
+    var fInvDate = SafeCol(mapping.FieldMappings["InvoiceDate"], "");
+    var rawDocId = mapping.FieldMappings.GetValueOrDefault("DocID", "");
+    var rawStatus = mapping.FieldMappings.GetValueOrDefault("WorkflowStatus", "");
+    var rawQueue = mapping.FieldMappings.GetValueOrDefault("WorkflowQueue", "");
+    var fDocId = string.IsNullOrEmpty(rawDocId) ? "NULL" : $"wi.{SafeCol(rawDocId, "")}";
+    var fStatus = string.IsNullOrEmpty(rawStatus) ? "NULL" : $"wi.{SafeCol(rawStatus, "")}";
+    var fQueue = string.IsNullOrEmpty(rawQueue) ? "NULL" : $"wi.{SafeCol(rawQueue, "")}";
 
     var siteMgrQueueIds = mapping.SiteMgrQueueIds.Count > 0
         ? string.Join(",", mapping.SiteMgrQueueIds)
@@ -636,9 +632,9 @@ app.MapGet("/api/reports/ap-productivity", (HttpRequest request) =>
             wi.{fInvNum}        AS InvoiceNumber,
             wi.{fAmount}        AS Amount,
             wi.{fInvDate}       AS InvoiceDate,
-            wi.{fDocId}         AS DocID,
-            wi.{fStatus}        AS WorkflowStatus,
-            wi.{fQueue}         AS WorkflowQueue,
+            {fDocId}             AS DocID,
+            {fStatus}            AS WorkflowStatus,
+            {fQueue}             AS WorkflowQueue,
 
             proc_u.FullName     AS APProcessor,
             proc_inst.StartTime AS ProcStartTime,
@@ -773,7 +769,7 @@ app.MapGet("/api/reports/ap-productivity", (HttpRequest request) =>
             else
                 totalDays = null;
 
-            if (totalDays.HasValue) totalDaysList.Add(totalDays.Value);
+            if (totalDays.HasValue && workItemComplete) totalDaysList.Add(totalDays.Value);
 
             var status = workItemComplete ? "Completed" : "In Progress";
 
