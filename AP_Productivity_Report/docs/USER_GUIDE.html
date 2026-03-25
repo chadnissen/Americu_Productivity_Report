@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Guide — AP Specialist Productivity Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html { scroll-behavior: smooth; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fb;
+      color: #1e293b;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+    .print-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+      z-index: 1000;
+      transition: background 0.2s;
+    }
+    .print-btn:hover { background: #1d4ed8; }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 50px 55px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 32px;
+      margin-bottom: 12px;
+    }
+    p { margin-bottom: 14px; }
+    .subtitle {
+      font-size: 16px;
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    hr {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 36px 0;
+    }
+    ul, ol {
+      margin-bottom: 14px;
+      padding-left: 24px;
+    }
+    li { margin-bottom: 8px; }
+    li > ul, li > ol { margin-top: 8px; margin-bottom: 4px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    thead th {
+      background: #f1f5f9;
+      font-weight: 600;
+      text-align: left;
+      padding: 10px 14px;
+      border: 1px solid #e2e8f0;
+    }
+    tbody td {
+      padding: 10px 14px;
+      border: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    pre {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .callout {
+      border-left: 4px solid;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .callout-note {
+      border-color: #2563eb;
+      background: #dbeafe;
+    }
+    .callout-important {
+      border-color: #d97706;
+      background: #fef3c7;
+    }
+    .toc { margin-bottom: 20px; }
+    .toc ul { list-style: none; padding-left: 0; }
+    .toc li { margin-bottom: 6px; }
+    .toc a { font-size: 15px; }
+    em { color: #64748b; }
+    @media print {
+      .print-btn { display: none; }
+      body { background: #fff; }
+      .container { margin: 0; padding: 0; }
+      .card { box-shadow: none; padding: 20px 0; }
+      table { page-break-inside: avoid; }
+      h2, h3 { page-break-after: avoid; }
+      .callout-note, .callout-important { background: none; }
+      tbody tr:nth-child(even) { background: none; }
+      thead th { background: none; }
+    }
+  </style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">Print this guide</button>
+
+<div class="container">
+<div class="card">
+
+<h1 id="ap-specialist-productivity-report-user-guide">AP Specialist Productivity Report &mdash; User Guide</h1>
+<p class="subtitle">This guide walks you through everything you need to know to use the AP Specialist Productivity Report. It covers how to run a report, read the results, filter and sort data, and export to Excel.</p>
+
+<hr>
+
+<h2 id="table-of-contents">Table of Contents</h2>
+<nav class="toc">
+<ul>
+  <li><a href="#getting-started">Getting Started</a></li>
+  <li><a href="#running-a-report">Running a Report</a></li>
+  <li><a href="#understanding-the-results">Understanding the Results</a>
+    <ul><li><a href="#rollup-summary-tables">Rollup Summary Tables</a></li></ul>
+  </li>
+  <li><a href="#filtering-results">Filtering Results</a></li>
+  <li><a href="#sorting">Sorting</a></li>
+  <li><a href="#pagination">Pagination</a></li>
+  <li><a href="#exporting-data">Exporting Data</a></li>
+  <li><a href="#tips-and-shortcuts">Tips and Shortcuts</a></li>
+</ul>
+</nav>
+
+<hr>
+
+<h2 id="getting-started">Getting Started</h2>
+
+<p>To open the report, simply navigate to the URL provided by your administrator in your web browser (Chrome, Edge, or Firefox all work well). You will be signed in automatically using your Windows account &mdash; no separate login is required.</p>
+
+<p>When the page loads, you will see:</p>
+
+<ul>
+  <li>A <strong>filter bar</strong> at the top with options for workflow, date range, and date basis</li>
+  <li>An empty report area below, ready for you to run your first query</li>
+</ul>
+
+<p>If this is your very first visit, the date range will default to <strong>Month to Date</strong> so you can get started quickly.</p>
+
+<hr>
+
+<h2 id="running-a-report">Running a Report</h2>
+
+<p>Follow these steps to generate a report:</p>
+
+<ol>
+  <li>
+    <p><strong>Select a Workflow</strong> &mdash; If your organization has more than one workflow configured, choose the one you want to report on from the <strong>Workflow</strong> dropdown. If there is only one workflow, this dropdown will not appear.</p>
+  </li>
+  <li>
+    <p><strong>Choose a Date Range</strong> &mdash; Pick a preset from the <strong>Preset</strong> dropdown or enter a custom range:</p>
+
+    <table>
+      <thead>
+        <tr><th>Preset</th><th>What It Covers</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Month to Date</td><td>From the 1st of the current month through today</td></tr>
+        <tr><td>Quarter to Date</td><td>From the 1st of the current quarter through today</td></tr>
+        <tr><td>Year to Date</td><td>From January 1st of the current year through today</td></tr>
+        <tr><td>Last Month</td><td>The entire previous calendar month</td></tr>
+        <tr><td>Last Quarter</td><td>The entire previous calendar quarter</td></tr>
+        <tr><td>Custom</td><td>You set the <strong>Start Date</strong> and <strong>End Date</strong> yourself</td></tr>
+      </tbody>
+    </table>
+  </li>
+  <li>
+    <p><strong>Select a Date Basis</strong> &mdash; This tells the report which date to use when filtering invoices into your chosen range:</p>
+
+    <table>
+      <thead>
+        <tr><th>Date Basis</th><th>What It Filters By</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>System Created Date</td><td>The date the invoice was entered into the system</td></tr>
+        <tr><td>Invoice Date</td><td>The date printed on the invoice itself</td></tr>
+        <tr><td>Site Mgr Approval Date</td><td>The date the site manager approved the invoice</td></tr>
+        <tr><td>AP Approval Date</td><td>The date AP gave final approval</td></tr>
+      </tbody>
+    </table>
+
+    <p>For example, choosing &ldquo;Last Month&rdquo; with &ldquo;Invoice Date&rdquo; shows all invoices dated within last month, regardless of when they entered the system.</p>
+  </li>
+  <li>
+    <p><strong>Click Run Report</strong> &mdash; The report will load and display your results.</p>
+  </li>
+</ol>
+
+<hr>
+
+<h2 id="understanding-the-results">Understanding the Results</h2>
+
+<h3 id="kpi-summary-strip">KPI Summary Strip</h3>
+
+<p>At the top of the results, five summary cards give you a quick snapshot of the data:</p>
+
+<table>
+  <thead>
+    <tr><th>Card</th><th>What It Tells You</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Total Invoices</strong></td><td>The number of invoices that match your date range and filters</td></tr>
+    <tr><td><strong>Total Dollar Value</strong></td><td>The combined dollar amount of all those invoices</td></tr>
+    <tr><td><strong>Unique Processors</strong></td><td>How many different AP specialists handled invoices in this set</td></tr>
+    <tr><td><strong>Unique Vendors</strong></td><td>How many different vendors are represented</td></tr>
+    <tr><td><strong>Avg Processing Days</strong></td><td>The average number of days from system entry to final approval</td></tr>
+  </tbody>
+</table>
+
+<p>These numbers update automatically when you apply filters (see <a href="#filtering-results">Filtering Results</a> below).</p>
+
+<hr>
+
+<h3 id="rollup-summary-tables">Rollup Summary Tables</h3>
+
+<p>Below the KPI cards, three summary tables provide aggregated views of your data:</p>
+
+<h4>By AP Specialist</h4>
+<p>Shows each AP processor with their invoice count, average processing days (SLA color-coded), and number of open (in-progress) invoices. Click any row to filter the detail table to that specialist&rsquo;s invoices.</p>
+
+<h4>By Site Manager</h4>
+<p>Shows each site manager with their assigned count, average approval days, pending (awaiting approval) count, and SLA percentage (the percentage of approvals completed within 3 days). Click any row to filter to that manager&rsquo;s invoices.</p>
+
+<h4>Aging Summary</h4>
+<p>Shows only in-progress invoices grouped into age buckets (0&ndash;3, 4&ndash;7, 8&ndash;14, 15&ndash;30, and 31+ days). Each bucket shows the count, total dollar value, and how many are waiting at the site manager step. Click any bucket row to filter the detail table to those invoices.</p>
+
+<div class="callout callout-note">
+  <strong>Click-to-filter:</strong> When you click a row in any rollup table, a blue filter banner appears above the detail table showing what filter is active (e.g., &ldquo;AP Specialist: Martinez, Ana&rdquo;). Click the <strong>Clear Filter</strong> button on the banner to remove the filter. The rollup filter works together with the Processor and Status dropdown filters.
+</div>
+
+<hr>
+
+<h3 id="report-table">Report Table</h3>
+
+<p>Each row in the table represents one invoice. Here is what each column means:</p>
+
+<table>
+  <thead>
+    <tr><th>Column</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>AP Processor</strong></td><td>The AP specialist assigned to the invoice</td></tr>
+    <tr><td><strong>Vendor Name</strong></td><td>The vendor or supplier on the invoice</td></tr>
+    <tr><td><strong>Invoice Date</strong></td><td>The date printed on the invoice</td></tr>
+    <tr><td><strong>Invoice #</strong></td><td>The invoice number</td></tr>
+    <tr><td><strong>Invoice Amount</strong></td><td>The dollar amount of the invoice</td></tr>
+    <tr><td><strong>System Entry</strong></td><td>The date the invoice was entered into the workflow system</td></tr>
+    <tr><td><strong>Site Mgr Approver</strong></td><td>The name of the site manager who approved (or is assigned to) the invoice</td></tr>
+    <tr><td><strong>Site Mgr Date</strong></td><td>The date the site manager completed their approval</td></tr>
+    <tr><td><strong>Mgr Days</strong></td><td>The number of business days the site manager approval step took</td></tr>
+    <tr><td><strong>AP Approver</strong></td><td>The name of the AP approver</td></tr>
+    <tr><td><strong>AP Approval Date</strong></td><td>The date AP approval was completed</td></tr>
+    <tr><td><strong>AP Days</strong></td><td>The number of business days the AP approval step took</td></tr>
+    <tr><td><strong>Total Days</strong></td><td>Total days from system entry to final approval (or through today if still in progress)</td></tr>
+    <tr><td><strong>Comments</strong></td><td>Any notes from the approval steps</td></tr>
+    <tr><td><strong>Status</strong></td><td>Whether the invoice is <strong>Completed</strong> or <strong>In Progress</strong></td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h3 id="sla-color-coding">SLA Color Coding</h3>
+
+<p>The timing columns (<strong>Mgr Days</strong>, <strong>AP Days</strong>, and <strong>Total Days</strong>) are color-coded to help you spot invoices that need attention at a glance:</p>
+
+<table>
+  <thead>
+    <tr><th>Color</th><th>Days</th><th>What It Means</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Green</strong></td><td>0 to 3 days</td><td>On track &mdash; processing is within the expected timeframe</td></tr>
+    <tr><td><strong>Yellow</strong></td><td>4 to 30 days</td><td>Attention needed &mdash; processing is taking longer than usual</td></tr>
+    <tr><td><strong>Red</strong></td><td>31 or more days</td><td>Overdue &mdash; this invoice has been waiting significantly longer than expected</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h3 id="status">Status</h3>
+
+<p>The <strong>Status</strong> column shows one of two values:</p>
+
+<ul>
+  <li><strong>Completed</strong> (green) &mdash; The invoice has been fully approved through all workflow steps</li>
+  <li><strong>In Progress</strong> (yellow) &mdash; The invoice is still moving through the approval process</li>
+</ul>
+
+<hr>
+
+<h2 id="filtering-results">Filtering Results</h2>
+
+<p>After running a report, you can narrow down the results using two additional filters in the filter bar. These filters work instantly &mdash; they do not reload data from the database.</p>
+
+<ul>
+  <li><strong>Processor</strong> &mdash; Select a specific AP specialist from the dropdown to see only their invoices. Choose &ldquo;All&rdquo; to see everyone.</li>
+  <li><strong>Status</strong> &mdash; Choose <strong>All</strong>, <strong>Completed</strong>, or <strong>In Progress</strong> to show only invoices with that status.</li>
+</ul>
+
+<p>The KPI summary cards at the top will update to reflect your filtered results.</p>
+
+<hr>
+
+<h2 id="sorting">Sorting</h2>
+
+<p>You can sort the report by any column:</p>
+
+<ul>
+  <li><strong>Click a column header</strong> to sort by that column in ascending order (A to Z, smallest to largest, oldest to newest).</li>
+  <li><strong>Click the same column header again</strong> to reverse the sort to descending order.</li>
+</ul>
+
+<p>The currently sorted column is highlighted with a small arrow indicator showing the sort direction.</p>
+
+<hr>
+
+<h2 id="pagination">Pagination</h2>
+
+<p>Results are displayed <strong>25 invoices per page</strong>. If your report returns more than 25 invoices, use the page navigation controls at the bottom of the table to move between pages.</p>
+
+<hr>
+
+<h2 id="exporting-data">Exporting Data</h2>
+
+<p>To export your report to a file you can open in Excel:</p>
+
+<ol>
+  <li>Run your report and apply any filters or sorting you want.</li>
+  <li>Click the <strong>Export CSV</strong> button.</li>
+  <li>A CSV file will download to your computer. The file is named with your date range, for example: <code>AP_Productivity_Report_2026-01-01_to_2026-03-12.csv</code>.</li>
+  <li>Double-click the downloaded file to open it in Excel.</li>
+</ol>
+
+<p>The export includes all data matching your current filters and sort order &mdash; not just the page you are viewing.</p>
+
+<div class="callout callout-note">
+  <strong>Note:</strong> If the file opens with strange characters in Excel, use <strong>Data &gt; From Text/CSV</strong> in Excel instead of double-clicking the file.
+</div>
+
+<hr>
+
+<h2 id="tips-and-shortcuts">Tips and Shortcuts</h2>
+
+<ul>
+  <li>
+    <p><strong>Your selections are saved automatically.</strong> The workflow, date preset, date basis, and filter choices you make are remembered between sessions. When you come back later, the report will have your last-used settings ready to go.</p>
+  </li>
+  <li>
+    <p><strong>Use presets for quick date ranges.</strong> Instead of typing dates manually, pick Month to Date, Last Month, or another preset to set both the start and end dates in one click.</p>
+  </li>
+  <li>
+    <p><strong>Filter before exporting.</strong> Apply your Processor and Status filters first, then export. The CSV will contain only the filtered data.</p>
+  </li>
+  <li>
+    <p><strong>Watch the colors.</strong> A quick scan of the color coding in the Mgr Days, AP Days, and Total Days columns will immediately highlight invoices that may need follow-up.</p>
+  </li>
+  <li>
+    <p><strong>Sort to find outliers.</strong> Click the Total Days column header to sort by processing time and quickly find the longest-running invoices.</p>
+  </li>
+</ul>
+
+<hr>
+
+<p><em>If you have questions or run into issues, contact your system administrator.</em></p>
+
+</div>
+</div>
+
+</body>
+</html>

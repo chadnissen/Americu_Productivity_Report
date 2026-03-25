@@ -3,6 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Set base href so relative URLs resolve correctly under IIS sub-applications
+        (function() {
+            var p = window.location.pathname;
+            var dir = p.substring(0, p.lastIndexOf('/') + 1);
+            var b = document.createElement('base');
+            b.href = dir;
+            document.head.appendChild(b);
+        })();
+    </script>
     <title>Settings — Database Connections</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -193,6 +203,64 @@
         }
         .toast.success { border-left: 4px solid var(--ef-status-success); color: var(--ef-status-success); }
         .toast.error { border-left: 4px solid var(--ef-status-danger); color: var(--ef-status-danger); }
+
+        .map-select {
+            font-family: var(--ef-font-family);
+            font-size: var(--ef-text-13);
+            color: var(--ef-text);
+            background: var(--ef-surface);
+            border: 1px solid var(--ef-border);
+            border-radius: var(--ef-radius-6);
+            padding: var(--ef-space-8) var(--ef-space-12);
+            width: 100%;
+            outline: none;
+        }
+        .map-select:focus {
+            border-color: var(--ef-primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        }
+
+        .queue-role-select {
+            width: auto;
+            min-width: 200px;
+        }
+
+        .ad-group-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--ef-space-8);
+            background: var(--ef-surface-2);
+            border: 1px solid var(--ef-border);
+            border-radius: var(--ef-radius-6);
+            padding: var(--ef-space-4) var(--ef-space-12);
+            font-size: var(--ef-text-13);
+            margin: 0 var(--ef-space-4) var(--ef-space-4) 0;
+        }
+        .ad-group-tag .remove-group {
+            cursor: pointer;
+            color: var(--ef-text-muted);
+            font-size: 16px;
+            line-height: 1;
+        }
+        .ad-group-tag .remove-group:hover {
+            color: var(--ef-status-danger);
+        }
+
+        .group-result-item {
+            padding: var(--ef-space-8) var(--ef-space-12);
+            cursor: pointer;
+            border-bottom: 1px solid var(--ef-border);
+            font-size: var(--ef-text-13);
+        }
+        .group-result-item:last-child { border-bottom: none; }
+        .group-result-item:hover { background: var(--ef-surface-2); }
+        .group-result-item .group-name { font-weight: 500; color: var(--ef-text); }
+        .group-result-item .group-desc { font-size: var(--ef-text-12); color: var(--ef-text-muted); }
+        .group-result-msg {
+            padding: var(--ef-space-8) var(--ef-space-12);
+            font-size: var(--ef-text-12);
+            color: var(--ef-text-muted);
+        }
     </style>
 </head>
 <body>
@@ -204,7 +272,7 @@
     <div class="page-header">
         <div class="page-header-left">
             <div>
-                <div class="breadcrumb"><a href="/">Reports</a> &nbsp;/&nbsp; <a href="/">AP Specialist Productivity</a> &nbsp;/&nbsp; Settings</div>
+                <div class="breadcrumb"><a href="./">Reports</a> &nbsp;/&nbsp; <a href="./">AP Specialist Productivity</a> &nbsp;/&nbsp; Settings</div>
                 <h1>Database Connections</h1>
             </div>
         </div>
@@ -222,11 +290,11 @@
                 </div>
                 <div class="form-group">
                     <label>Database</label>
-                    <input type="text" id="wfDatabase" placeholder="e.g. ECMTWF_v4">
+                    <input type="text" id="wfDatabase" placeholder="e.g. WorkflowDB">
                 </div>
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" id="wfUsername" placeholder="e.g. sysop">
+                    <input type="text" id="wfUsername" placeholder="e.g. reportuser">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -245,11 +313,11 @@
                 </div>
                 <div class="form-group">
                     <label>Database</label>
-                    <input type="text" id="aeDatabase" placeholder="e.g. AEDemo25from22">
+                    <input type="text" id="aeDatabase" placeholder="e.g. AppEnhancerDB">
                 </div>
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" id="aeUsername" placeholder="e.g. sysop">
+                    <input type="text" id="aeUsername" placeholder="e.g. reportuser">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -262,7 +330,109 @@
 
         <div class="save-row">
             <button class="btn btn-primary" id="saveBtn" onclick="saveSettings()">Save Settings</button>
-            <a href="/" style="color: var(--ef-primary); font-size: var(--ef-text-13); text-decoration: none;">Back to Report</a>
+            <a href="./" style="color: var(--ef-primary); font-size: var(--ef-text-13); text-decoration: none;">Back to Report</a>
+        </div>
+
+        <!-- Workflow Configuration Section (appears after WF connection test succeeds) -->
+        <div id="wfConfigSection" style="display:none; margin-top: var(--ef-space-24);">
+            <div class="card">
+                <div class="card-title">Workflow Configuration</div>
+                <p style="font-size: var(--ef-text-12); color: var(--ef-text-secondary); margin-bottom: var(--ef-space-16);">
+                    Select a workflow, then map which database fields correspond to the report columns and assign approval roles to each queue.
+                </p>
+
+                <div class="form-group">
+                    <label>Workflow</label>
+                    <select id="wfConfigSelect" class="map-select" onchange="onWorkflowSelected()">
+                        <option value="">-- Select a workflow --</option>
+                    </select>
+                </div>
+
+                <!-- Mapping area (shown after workflow selection) -->
+                <div id="fieldMappingArea" style="display:none; margin-top: var(--ef-space-16);">
+
+                    <div style="font-size: var(--ef-text-13); font-weight: 600; margin-bottom: var(--ef-space-12); padding-bottom: var(--ef-space-8); border-bottom: 1px solid var(--ef-border);">Field Mappings</div>
+                    <p style="font-size: var(--ef-text-12); color: var(--ef-text-muted); margin-bottom: var(--ef-space-12);">Map each report column to the corresponding workflow field. Fields are auto-detected when possible.</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--ef-space-12);">
+                        <div class="form-group">
+                            <label>Vendor Name <span style="color: var(--ef-status-danger);">*</span></label>
+                            <select id="mapVendorName" class="map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Invoice Number <span style="color: var(--ef-status-danger);">*</span></label>
+                            <select id="mapInvoiceNumber" class="map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Invoice Amount <span style="color: var(--ef-status-danger);">*</span></label>
+                            <select id="mapAmount" class="map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Invoice Date <span style="color: var(--ef-status-danger);">*</span></label>
+                            <select id="mapInvoiceDate" class="map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Doc ID <span style="color: var(--ef-text-muted); font-weight: 400; text-transform: none;">(optional)</span></label>
+                            <select id="mapDocID" class="map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Workflow Status <span style="color: var(--ef-text-muted); font-weight: 400; text-transform: none;">(optional)</span></label>
+                            <select id="mapWorkflowStatus" class="map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Workflow Queue <span style="color: var(--ef-text-muted); font-weight: 400; text-transform: none;">(optional)</span></label>
+                            <select id="mapWorkflowQueue" class="map-select"></select>
+                        </div>
+                    </div>
+
+                    <div style="font-size: var(--ef-text-13); font-weight: 600; margin: var(--ef-space-24) 0 var(--ef-space-12); padding-bottom: var(--ef-space-8); border-bottom: 1px solid var(--ef-border);">Queue Roles</div>
+                    <p style="font-size: var(--ef-text-12); color: var(--ef-text-muted); margin-bottom: var(--ef-space-12);">Assign each queue's role in the approval process. The report uses these to determine who approved and how long each step took.</p>
+                    <div id="queueRolesArea">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--ef-border);">
+                                    <th style="text-align: left; padding: var(--ef-space-8) var(--ef-space-12); font-size: var(--ef-text-12); font-weight: 500; color: var(--ef-text-secondary); text-transform: uppercase; letter-spacing: 0.03em;">Queue</th>
+                                    <th style="text-align: left; padding: var(--ef-space-8) var(--ef-space-12); font-size: var(--ef-text-12); font-weight: 500; color: var(--ef-text-secondary); text-transform: uppercase; letter-spacing: 0.03em; width: 220px;">Role</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queueRolesBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: var(--ef-space-24); display: flex; align-items: center; gap: var(--ef-space-12);">
+                        <button class="btn btn-primary" id="saveMappingBtn" onclick="saveWorkflowMapping()">Save Workflow Mapping</button>
+                        <button class="btn btn-secondary" id="removeMappingBtn" style="display:none; color: var(--ef-status-danger); border-color: var(--ef-status-danger);" onclick="removeWorkflowMapping()">Remove Mapping</button>
+                        <span id="mappingStatus" style="font-size: var(--ef-text-12);"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Access Control Section -->
+        <div style="margin-top: var(--ef-space-24);">
+            <div class="card">
+                <div class="card-title">Access Control</div>
+                <p style="font-size: var(--ef-text-12); color: var(--ef-text-secondary); margin-bottom: var(--ef-space-16);">
+                    Restrict report access to specific Active Directory groups. Users must be a member of at least one listed group. Leave empty to allow all authenticated Windows users.
+                </p>
+                <div id="authBootstrapBanner" style="display:none; background: #fef3c7; border: 1px solid #f59e0b; border-radius: var(--ef-radius-6); padding: var(--ef-space-8) var(--ef-space-16); margin-bottom: var(--ef-space-16); font-size: var(--ef-text-12); color: #92400e;">
+                    No AD groups configured — all authenticated Windows users currently have access.
+                </div>
+                <div class="form-group">
+                    <label>Allowed AD Groups</label>
+                    <div id="adGroupsList"></div>
+                    <div style="position: relative; margin-top: var(--ef-space-8);">
+                        <div style="display: flex; gap: var(--ef-space-8);">
+                            <input type="text" id="newAdGroup" placeholder="Type to search AD groups or enter manually..." oninput="onGroupSearchInput()" onkeydown="onGroupSearchKey(event)" style="font-family: var(--ef-font-family); font-size: var(--ef-text-13); color: var(--ef-text); background: var(--ef-surface); border: 1px solid var(--ef-border); border-radius: var(--ef-radius-6); padding: var(--ef-space-8) var(--ef-space-12); flex: 1; outline: none;">
+                            <button class="btn btn-secondary" onclick="addAdGroup()">Add</button>
+                        </div>
+                        <div id="groupSearchResults" style="display:none; position: absolute; top: 100%; left: 0; right: 60px; background: var(--ef-surface); border: 1px solid var(--ef-border); border-radius: var(--ef-radius-6); box-shadow: var(--ef-shadow-2); max-height: 250px; overflow-y: auto; z-index: 100; margin-top: 2px;"></div>
+                    </div>
+                    <div style="font-size: var(--ef-text-12); color: var(--ef-text-muted); margin-top: var(--ef-space-4);">Search finds AD groups as you type, or enter a group name manually and click Add.</div>
+                </div>
+                <div style="margin-top: var(--ef-space-16);">
+                    <button class="btn btn-primary" onclick="saveAuthSettings()">Save Access Control</button>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -273,7 +443,7 @@
 
         async function loadCurrentSettings() {
             try {
-                const res = await fetch('/api/settings');
+                const res = await fetch('api/settings');
                 const data = await res.json();
 
                 if (data.configured) {
@@ -283,6 +453,8 @@
                         document.getElementById('wfUsername').value = data.workflow.username || '';
                         if (data.workflow.hasPassword) {
                             document.getElementById('wfPassword').placeholder = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+                            // WF connection is already configured, show workflow config section
+                            showWorkflowConfig();
                         }
                     }
                     if (data.appEnhancer) {
@@ -327,7 +499,7 @@
             resultEl.textContent = 'Testing...';
 
             try {
-                const res = await fetch('/api/settings/test', {
+                const res = await fetch('api/settings/test', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ server, database, username, password })
@@ -337,6 +509,10 @@
                 if (data.success) {
                     resultEl.className = 'test-result success';
                     resultEl.textContent = data.message;
+                    // Auto-save and show workflow config when WF test succeeds
+                    if (prefix === 'wf') {
+                        await saveSettings();
+                    }
                 } else {
                     resultEl.className = 'test-result error';
                     resultEl.textContent = data.message;
@@ -369,7 +545,7 @@
             };
 
             try {
-                const res = await fetch('/api/settings', {
+                const res = await fetch('api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
@@ -378,6 +554,10 @@
 
                 if (data.success) {
                     showToast('Settings saved successfully.', 'success');
+                    // Show workflow config if WF connection was saved
+                    if (body.workflow.server && body.workflow.database && body.workflow.username) {
+                        showWorkflowConfig();
+                    }
                     // Update password placeholders
                     if (body.workflow.password) {
                         document.getElementById('wfPassword').value = '';
@@ -406,6 +586,416 @@
             setTimeout(function() {
                 toast.classList.remove('show');
             }, 4000);
+        }
+
+        // ── Workflow Configuration ─────────────────────────────────────
+        var wfFields = [];
+        var wfQueues = [];
+
+        function showWorkflowConfig() {
+            var section = document.getElementById('wfConfigSection');
+            if (!section) return;
+            section.style.display = 'block';
+            loadWorkflowList();
+        }
+
+        async function loadWorkflowList() {
+            try {
+                var res = await fetch('api/workflows');
+                if (!res.ok) return;
+                var data = await res.json();
+                if (data.error) return;
+                var select = document.getElementById('wfConfigSelect');
+                select.innerHTML = '<option value="">-- Select a workflow --</option>';
+                data.forEach(function(wf) {
+                    var opt = document.createElement('option');
+                    opt.value = wf.workflowId;
+                    opt.textContent = wf.workflowId + ' - ' + wf.workflowName;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Failed to load workflows:', e);
+            }
+        }
+
+        async function onWorkflowSelected() {
+            var wfId = document.getElementById('wfConfigSelect').value;
+            if (!wfId) {
+                document.getElementById('fieldMappingArea').style.display = 'none';
+                return;
+            }
+
+            try {
+                var [fieldsRes, queuesRes, mappingRes] = await Promise.all([
+                    fetch('api/workflows/' + wfId + '/fields'),
+                    fetch('api/workflows/' + wfId + '/queues'),
+                    fetch('api/settings/workflow-mapping/' + wfId)
+                ]);
+
+                wfFields = await fieldsRes.json();
+                wfQueues = await queuesRes.json();
+                var mappingData = await mappingRes.json();
+                var saved = mappingData.configured ? mappingData.mapping : null;
+
+                populateFieldDropdowns(saved);
+                populateQueueRoles(saved);
+
+                document.getElementById('removeMappingBtn').style.display = saved ? 'inline-flex' : 'none';
+                document.getElementById('fieldMappingArea').style.display = 'block';
+            } catch (e) {
+                console.error('Failed to load workflow config:', e);
+                showToast('Failed to load workflow configuration: ' + e.message, 'error');
+            }
+        }
+
+        function populateFieldDropdowns(saved) {
+            var mappingIds = ['mapVendorName', 'mapInvoiceNumber', 'mapAmount', 'mapInvoiceDate', 'mapDocID', 'mapWorkflowStatus', 'mapWorkflowQueue'];
+            var mappingKeys = ['VendorName', 'InvoiceNumber', 'Amount', 'InvoiceDate', 'DocID', 'WorkflowStatus', 'WorkflowQueue'];
+
+            for (var i = 0; i < mappingIds.length; i++) {
+                var select = document.getElementById(mappingIds[i]);
+                select.innerHTML = '<option value="">-- Select field --</option>';
+
+                wfFields.forEach(function(f) {
+                    var opt = document.createElement('option');
+                    opt.value = f.columnName;
+                    var label = f.columnName;
+                    if (f.fieldName) label += ' - ' + f.fieldName;
+                    else if (f.mappedFieldName) label += ' - ' + f.mappedFieldName;
+                    opt.textContent = label;
+                    select.appendChild(opt);
+                });
+
+                if (saved && saved.fieldMappings && saved.fieldMappings[mappingKeys[i]]) {
+                    select.value = saved.fieldMappings[mappingKeys[i]];
+                } else {
+                    autoDetectField(select, mappingKeys[i]);
+                }
+            }
+        }
+
+        function autoDetectField(select, key) {
+            var patterns = {
+                'VendorName': ['vendor name', 'vendor'],
+                'InvoiceNumber': ['invoice number', 'invoice #', 'invoice no'],
+                'Amount': ['amount', 'invoice amount', 'total amount'],
+                'InvoiceDate': ['invoice date'],
+                'DocID': ['docid', 'doc id', 'document id'],
+                'WorkflowStatus': ['workflow status', 'status'],
+                'WorkflowQueue': ['workflow queue', 'queue']
+            }[key] || [];
+
+            for (var i = 0; i < wfFields.length; i++) {
+                var fn = (wfFields[i].fieldName || '').toLowerCase().trim();
+                var mn = (wfFields[i].mappedFieldName || '').toLowerCase().trim();
+                for (var j = 0; j < patterns.length; j++) {
+                    if (fn === patterns[j] || mn === patterns[j] || fn.indexOf(patterns[j]) >= 0 || mn.indexOf(patterns[j]) >= 0) {
+                        select.value = wfFields[i].columnName;
+                        return;
+                    }
+                }
+            }
+        }
+
+        function populateQueueRoles(saved) {
+            var tbody = document.getElementById('queueRolesBody');
+            tbody.innerHTML = '';
+
+            var savedSiteMgr = (saved && saved.siteMgrQueueIds) || [];
+            var savedSenior = (saved && saved.seniorApprovalQueueIds) || [];
+
+            wfQueues.forEach(function(q) {
+                var tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid var(--ef-border)';
+
+                // Queue name cell
+                var tdName = document.createElement('td');
+                tdName.style.padding = 'var(--ef-space-8) var(--ef-space-12)';
+                tdName.style.fontSize = 'var(--ef-text-13)';
+                tdName.textContent = q.queueId + ' - ' + q.queueName;
+                tr.appendChild(tdName);
+
+                // Role dropdown cell
+                var tdRole = document.createElement('td');
+                tdRole.style.padding = 'var(--ef-space-8) var(--ef-space-12)';
+                var roleSelect = document.createElement('select');
+                roleSelect.className = 'map-select queue-role-select';
+                roleSelect.dataset.queueId = q.queueId;
+                roleSelect.innerHTML =
+                    '<option value="none">-- Not used --</option>' +
+                    '<option value="siteMgr">First Approval (Site Mgr)</option>' +
+                    '<option value="senior">Second Approval (AP/Senior)</option>';
+
+                // Set saved value or auto-detect
+                if (savedSiteMgr.indexOf(q.queueId) >= 0) {
+                    roleSelect.value = 'siteMgr';
+                } else if (savedSenior.indexOf(q.queueId) >= 0) {
+                    roleSelect.value = 'senior';
+                } else if (!saved) {
+                    roleSelect.value = autoDetectQueueRole(q.queueName);
+                }
+
+                tdRole.appendChild(roleSelect);
+                tr.appendChild(tdRole);
+                tbody.appendChild(tr);
+            });
+        }
+
+        function autoDetectQueueRole(queueName) {
+            var name = (queueName || '').toLowerCase();
+            if (name.indexOf('senior') >= 0) return 'senior';
+            if ((name.indexOf('approval') >= 0 || name.indexOf('approver') >= 0)
+                && name.indexOf('approved') < 0 && name.indexOf('40') < 0) return 'siteMgr';
+            return 'none';
+        }
+
+        async function saveWorkflowMapping() {
+            var wfId = document.getElementById('wfConfigSelect').value;
+            if (!wfId) {
+                showToast('Please select a workflow first.', 'error');
+                return;
+            }
+
+            var wfName = document.getElementById('wfConfigSelect').selectedOptions[0].textContent;
+
+            // Collect field mappings (all 7, but only first 4 required)
+            var fieldMappings = {};
+            var requiredFields = {
+                VendorName: 'Vendor Name',
+                InvoiceNumber: 'Invoice Number',
+                Amount: 'Invoice Amount',
+                InvoiceDate: 'Invoice Date'
+            };
+            var allFieldIds = {
+                VendorName: 'mapVendorName',
+                InvoiceNumber: 'mapInvoiceNumber',
+                Amount: 'mapAmount',
+                InvoiceDate: 'mapInvoiceDate',
+                DocID: 'mapDocID',
+                WorkflowStatus: 'mapWorkflowStatus',
+                WorkflowQueue: 'mapWorkflowQueue'
+            };
+
+            for (var key in allFieldIds) {
+                var val = document.getElementById(allFieldIds[key]).value;
+                if (val) fieldMappings[key] = val;
+            }
+
+            // Validate required fields
+            for (var rKey in requiredFields) {
+                if (!fieldMappings[rKey]) {
+                    showToast('Please select a field for "' + requiredFields[rKey] + '".', 'error');
+                    return;
+                }
+            }
+
+            // Collect queue roles
+            var siteMgrQueueIds = [];
+            var seniorApprovalQueueIds = [];
+            document.querySelectorAll('.queue-role-select').forEach(function(sel) {
+                var qId = parseInt(sel.dataset.queueId);
+                if (sel.value === 'siteMgr') siteMgrQueueIds.push(qId);
+                else if (sel.value === 'senior') seniorApprovalQueueIds.push(qId);
+            });
+
+            if (siteMgrQueueIds.length === 0 && seniorApprovalQueueIds.length === 0) {
+                showToast('Please assign at least one queue to an approval role.', 'error');
+                return;
+            }
+
+            var btn = document.getElementById('saveMappingBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                var res = await fetch('api/settings/workflow-mapping/' + wfId, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workflowId: parseInt(wfId),
+                        workflowName: wfName,
+                        fieldMappings: fieldMappings,
+                        siteMgrQueueIds: siteMgrQueueIds,
+                        seniorApprovalQueueIds: seniorApprovalQueueIds
+                    })
+                });
+                var data = await res.json();
+
+                if (data.success) {
+                    showToast('Workflow mapping saved.', 'success');
+                } else {
+                    showToast('Failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (e) {
+                showToast('Request failed: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Workflow Mapping';
+            }
+        }
+        // ── Access Control ─────────────────────────────────────────────
+        var adGroups = [];
+
+        async function loadAuthSettings() {
+            try {
+                var res = await fetch('api/settings/auth');
+                var data = await res.json();
+                adGroups = data.allowedAdGroups || [];
+                renderAdGroups();
+                document.getElementById('authBootstrapBanner').style.display = adGroups.length === 0 ? 'block' : 'none';
+            } catch (e) {
+                console.error('Failed to load auth settings:', e);
+            }
+        }
+
+        function renderAdGroups() {
+            var container = document.getElementById('adGroupsList');
+            container.innerHTML = '';
+            adGroups.forEach(function(group, idx) {
+                var tag = document.createElement('span');
+                tag.className = 'ad-group-tag';
+                tag.innerHTML = group + ' <span class="remove-group" onclick="removeAdGroup(' + idx + ')">&times;</span>';
+                container.appendChild(tag);
+            });
+        }
+
+        var groupSearchTimer = null;
+
+        function onGroupSearchInput() {
+            clearTimeout(groupSearchTimer);
+            var val = document.getElementById('newAdGroup').value.trim();
+            var panel = document.getElementById('groupSearchResults');
+
+            if (val.length < 2) {
+                panel.style.display = 'none';
+                return;
+            }
+
+            panel.style.display = 'block';
+            panel.innerHTML = '<div class="group-result-msg">Searching...</div>';
+
+            groupSearchTimer = setTimeout(function() { searchAdGroups(val); }, 300);
+        }
+
+        function onGroupSearchKey(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                var panel = document.getElementById('groupSearchResults');
+                panel.style.display = 'none';
+                addAdGroup();
+            } else if (event.key === 'Escape') {
+                document.getElementById('groupSearchResults').style.display = 'none';
+            }
+        }
+
+        async function searchAdGroups(query) {
+            var panel = document.getElementById('groupSearchResults');
+            try {
+                var res = await fetch('api/settings/auth/browse-groups?q=' + encodeURIComponent(query));
+                var data = await res.json();
+
+                if (data.message && (!data.groups || data.groups.length === 0)) {
+                    panel.innerHTML = '<div class="group-result-msg">' + data.message + '</div>';
+                    return;
+                }
+
+                if (!data.groups || data.groups.length === 0) {
+                    panel.innerHTML = '<div class="group-result-msg">No groups found.</div>';
+                    return;
+                }
+
+                var html = '';
+                data.groups.forEach(function(g) {
+                    var desc = g.description ? '<div class="group-desc">' + g.description + '</div>' : '';
+                    html += '<div class="group-result-item" onclick="selectAdGroup(\'' + g.fullName.replace(/'/g, "\\'") + '\')">'
+                        + '<div class="group-name">' + g.fullName + '</div>' + desc + '</div>';
+                });
+                panel.innerHTML = html;
+            } catch (e) {
+                panel.innerHTML = '<div class="group-result-msg">Search failed: ' + e.message + '</div>';
+            }
+        }
+
+        function selectAdGroup(fullName) {
+            document.getElementById('groupSearchResults').style.display = 'none';
+            document.getElementById('newAdGroup').value = fullName;
+            addAdGroup();
+        }
+
+        // Close search panel when clicking outside
+        document.addEventListener('click', function(e) {
+            var panel = document.getElementById('groupSearchResults');
+            var input = document.getElementById('newAdGroup');
+            if (panel && !panel.contains(e.target) && e.target !== input) {
+                panel.style.display = 'none';
+            }
+        });
+
+        function addAdGroup() {
+            var input = document.getElementById('newAdGroup');
+            var val = input.value.trim();
+            if (!val) return;
+            if (adGroups.indexOf(val) >= 0) {
+                showToast('Group already added.', 'error');
+                input.value = '';
+                return;
+            }
+            adGroups.push(val);
+            renderAdGroups();
+            input.value = '';
+            document.getElementById('groupSearchResults').style.display = 'none';
+            document.getElementById('authBootstrapBanner').style.display = adGroups.length === 0 ? 'block' : 'none';
+        }
+
+        function removeAdGroup(idx) {
+            adGroups.splice(idx, 1);
+            renderAdGroups();
+            document.getElementById('authBootstrapBanner').style.display = adGroups.length === 0 ? 'block' : 'none';
+        }
+
+        async function saveAuthSettings() {
+            try {
+                var res = await fetch('api/settings/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ allowedAdGroups: adGroups })
+                });
+                var data = await res.json();
+                if (data.success) {
+                    showToast('Access control settings saved.', 'success');
+                } else {
+                    showToast('Failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (e) {
+                showToast('Request failed: ' + e.message, 'error');
+            }
+        }
+
+        // Load auth settings on page load
+        loadAuthSettings();
+
+        async function removeWorkflowMapping() {
+            var wfId = document.getElementById('wfConfigSelect').value;
+            if (!wfId) return;
+
+            var wfName = document.getElementById('wfConfigSelect').selectedOptions[0].textContent;
+            if (!confirm('Remove the mapping for "' + wfName + '"?\n\nThis workflow will no longer appear in the report dropdown.')) return;
+
+            try {
+                var res = await fetch('api/settings/workflow-mapping/' + wfId, { method: 'DELETE' });
+                var data = await res.json();
+
+                if (data.success) {
+                    showToast('Mapping removed for ' + wfName + '.', 'success');
+                    document.getElementById('removeMappingBtn').style.display = 'none';
+                    document.getElementById('fieldMappingArea').style.display = 'none';
+                    document.getElementById('wfConfigSelect').value = '';
+                } else {
+                    showToast('Failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (e) {
+                showToast('Request failed: ' + e.message, 'error');
+            }
         }
     </script>
 

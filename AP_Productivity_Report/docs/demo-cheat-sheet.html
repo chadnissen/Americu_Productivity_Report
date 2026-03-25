@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP Specialist Productivity Report — Demo Cheat Sheet</title>
+<style>
+  @media print {
+    body { font-size: 11px; }
+    .page { box-shadow: none; padding: 24px; }
+    .no-print { display: none; }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f0f2f5; color: #1f2937; line-height: 1.5;
+  }
+  .page {
+    max-width: 820px; margin: 24px auto; background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.1); padding: 36px 40px;
+  }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    border-bottom: 3px solid #1e3a5f; padding-bottom: 12px; margin-bottom: 20px;
+  }
+  .header h1 { font-size: 20px; color: #1e3a5f; }
+  .header .tag {
+    background: #1e3a5f; color: #fff; font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 3px; text-transform: uppercase; letter-spacing: .5px;
+  }
+  h2 {
+    font-size: 14px; text-transform: uppercase; letter-spacing: 1px;
+    color: #1e3a5f; margin: 20px 0 8px; border-bottom: 1px solid #d1d5db; padding-bottom: 4px;
+  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 28px; }
+  .section { margin-bottom: 4px; }
+  ol { padding-left: 20px; margin: 4px 0; }
+  ol li { margin-bottom: 6px; }
+  ul { padding-left: 18px; margin: 4px 0; }
+  ul li { margin-bottom: 4px; }
+  .step-label {
+    font-weight: 700; color: #2563a0; display: inline;
+  }
+  .tip {
+    background: #eff6ff; border-left: 3px solid #2563eb;
+    padding: 6px 10px; margin: 6px 0; font-size: 13px; color: #1e40af;
+  }
+  .objection {
+    background: #fefce8; border-left: 3px solid #d97706;
+    padding: 6px 10px; margin: 4px 0; font-size: 13px;
+  }
+  .objection strong { color: #92400e; }
+  .closer {
+    background: #f0fdf4; border: 1px solid #86efac; border-radius: 4px;
+    padding: 10px 14px; margin-top: 16px;
+  }
+  .closer strong { color: #166534; }
+  .footer {
+    text-align: center; font-size: 11px; color: #9ca3af;
+    margin-top: 20px; padding-top: 10px; border-top: 1px solid #e5e7eb;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div>
+      <h1>AP Specialist Productivity Report</h1>
+      <div style="font-size:13px;color:#6b7280;">Live Demo Cheat Sheet &mdash; CASO Software</div>
+    </div>
+    <span class="tag">Internal Use</span>
+  </div>
+
+  <!-- OPENING -->
+  <h2>Opening (30 seconds)</h2>
+  <p style="font-size:14px;">&ldquo;This is a self-service reporting tool that gives AP managers real-time visibility into invoice processing performance &mdash; who&rsquo;s doing the work, how fast approvals are moving, and where invoices are stuck.&rdquo;</p>
+
+  <!-- DEMO FLOW -->
+  <h2>Demo Flow (5&ndash;8 minutes)</h2>
+  <ol>
+    <li>
+      <span class="step-label">Run the report</span> &mdash; Select a date preset (YTD works well) and click <b>Run Report</b>. Point out the page loads in seconds with no install required.
+    </li>
+    <li>
+      <span class="step-label">KPI cards</span> &mdash; Walk across the 5 cards: Total Invoices, Dollar Value, Unique Processors, Unique Vendors, Avg Processing Days. &ldquo;This is your at-a-glance executive summary.&rdquo;
+    </li>
+    <li>
+      <span class="step-label">Rollup tables</span> &mdash; Show the three summary tables:
+      <ul>
+        <li><b>By AP Specialist</b> &mdash; who has the most volume, who has invoices stuck</li>
+        <li><b>By Site Manager</b> &mdash; approval speed and SLA compliance %</li>
+        <li><b>Aging Summary</b> &mdash; click the <b>31+ days</b> row (high-impact moment &mdash; instantly isolates overdue invoices)</li>
+      </ul>
+    </li>
+    <li>
+      <span class="step-label">Click-to-filter</span> &mdash; Click any rollup row. Show the blue filter banner, then show KPIs recalculate instantly. Click <b>Clear Filter</b> to reset.
+    </li>
+    <li>
+      <span class="step-label">Status filter</span> &mdash; Switch between All / In Progress / Completed. KPIs and rollup tables update without a page reload.
+    </li>
+    <li>
+      <span class="step-label">Sort &amp; browse</span> &mdash; Click a column header (Amount or Total Days work well). Show pagination if many rows.
+    </li>
+    <li>
+      <span class="step-label">Date basis</span> &mdash; Switch from &ldquo;System Created Date&rdquo; to &ldquo;Invoice Date&rdquo; or &ldquo;Approval Date.&rdquo; &ldquo;Lets you analyze the same data from different perspectives.&rdquo;
+    </li>
+    <li>
+      <span class="step-label">CSV export</span> &mdash; Click Export. &ldquo;Opens directly in Excel &mdash; great for month-end audit or ad-hoc analysis.&rdquo;
+    </li>
+  </ol>
+
+  <div class="tip"><b>Pro tip:</b> If time is short, steps 1&ndash;4 are the money shots. Steps 5&ndash;8 are supporting detail.</div>
+
+  <!-- KEY VALUE PROPS -->
+  <h2>Key Value Props</h2>
+  <div class="two-col">
+    <div class="section">
+      <ul>
+        <li><b>Zero install</b> &mdash; single .exe, no runtime needed</li>
+        <li><b>Windows SSO</b> &mdash; no passwords, AD group security</li>
+        <li><b>Real-time</b> &mdash; queries live ECMT data, no ETL</li>
+      </ul>
+    </div>
+    <div class="section">
+      <ul>
+        <li><b>Multi-workflow</b> &mdash; configure each workflow independently</li>
+        <li><b>Self-service</b> &mdash; managers run their own reports</li>
+        <li><b>Audit-ready</b> &mdash; CSV export for compliance</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SLA COLOR CODING REFERENCE -->
+  <h2>SLA Color Reference</h2>
+  <div class="two-col">
+    <div class="section">
+      <ul>
+        <li><span style="color:#16a34a;font-weight:700;">Green</span> &mdash; 0&ndash;3 days</li>
+        <li><span style="color:#d97706;font-weight:700;">Yellow</span> &mdash; 4&ndash;30 days</li>
+        <li><span style="color:#dc2626;font-weight:700;">Red</span> &mdash; 31+ days</li>
+      </ul>
+    </div>
+    <div class="section">
+      <ul>
+        <li>SLA % <span style="color:#16a34a;font-weight:700;">Green</span> &mdash; 85%+</li>
+        <li>SLA % <span style="color:#d97706;font-weight:700;">Yellow</span> &mdash; 70&ndash;84%</li>
+        <li>SLA % <span style="color:#dc2626;font-weight:700;">Red</span> &mdash; below 70%</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- COMMON QUESTIONS -->
+  <h2>Common Questions</h2>
+  <div class="objection"><strong>Q: Does this require a separate database?</strong><br>No &mdash; it reads directly from the existing ECMToolbox Workflow database. No data duplication.</div>
+  <div class="objection"><strong>Q: Can we customize which fields map to which columns?</strong><br>Yes &mdash; the Settings page lets you map any workflow field to the report columns. Auto-detection handles most setups.</div>
+  <div class="objection"><strong>Q: Who can access it?</strong><br>Controlled by Active Directory groups. You decide which AD groups can see the report.</div>
+  <div class="objection"><strong>Q: Can we change the SLA thresholds?</strong><br>That&rsquo;s on the roadmap &mdash; configurable per-workflow so each team sets their own targets.</div>
+  <div class="objection"><strong>Q: What about multiple approval steps?</strong><br>Currently supports two-step (Site Mgr + Senior). Configurable N-step approvals are planned.</div>
+
+  <!-- CLOSER -->
+  <div class="closer">
+    <strong>Closing line:</strong> &ldquo;This gives your AP managers the visibility they need without waiting on IT to run a report. It&rsquo;s self-service, runs on your existing data, and deploys in minutes.&rdquo;
+  </div>
+
+  <div class="footer">CASO Software &bull; Confidential &bull; For internal demo use only</div>
+
+</div>
+</body>
+</html>

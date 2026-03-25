@@ -1,8 +1,12 @@
 using System.Diagnostics;
+using System.DirectoryServices;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,10 +14,19 @@ var builder = WebApplication.CreateBuilder(args);
 // Configure Kestrel to listen on port 5000
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
+// ── Authentication (Windows/Negotiate) ──────────────────────────────────────
+builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+    .AddNegotiate();
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
-// Serve static files from wwwroot
+// Serve static files from wwwroot (before auth so CSS/JS are always accessible)
 app.UseStaticFiles();
+
+// Wire up auth middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
 // ── Paths ────────────────────────────────────────────────────────────────────
 var appDir = AppContext.BaseDirectory;
@@ -78,23 +91,174 @@ SqlConnection GetWfConnection()
 {
     var settings = LoadSettings();
     if (settings?.Workflow == null)
-        throw new InvalidOperationException("Database connections not configured. Visit /settings.html to set up.");
+        throw new InvalidOperationException("Database connections not configured. Visit settings.html to set up.");
     var conn = new SqlConnection(BuildConnectionString(settings.Workflow));
     conn.Open();
     return conn;
 }
 
+// ── Auth helpers ─────────────────────────────────────────────────────────────
+bool IsUserAuthorized(HttpContext ctx)
+{
+    var identity = ctx.User.Identity;
+    if (identity == null || !identity.IsAuthenticated) return false;
+
+    var settings = LoadSettings();
+    var groups = settings?.AllowedAdGroups;
+
+    // Bootstrap mode: no groups configured = all authenticated users allowed
+    if (groups == null || groups.Count == 0) return true;
+
+    // Check AD group membership
+    if (ctx.User is WindowsPrincipal wp)
+    {
+        foreach (var group in groups)
+        {
+            try { if (wp.IsInRole(group)) return true; } catch { }
+        }
+    }
+
+    return false;
+}
+
+string GetDisplayName(HttpContext ctx)
+{
+    var name = ctx.User.Identity?.Name ?? "";
+    // "DOMAIN\username" → just the username part, capitalized nicely
+    if (name.Contains('\\'))
+        name = name.Substring(name.IndexOf('\\') + 1);
+    return name;
+}
+
 // ── Routes ───────────────────────────────────────────────────────────────────
 
-// GET / — Serve index.html
-app.MapGet("/", () => Results.File(
-    Path.Combine(app.Environment.WebRootPath, "index.html"),
-    "text/html"));
+// GET /api/auth/me — Return current user info
+app.MapGet("/api/auth/me", (HttpContext ctx) =>
+{
+    var identity = ctx.User.Identity;
+    return Results.Json(new
+    {
+        authenticated = identity?.IsAuthenticated ?? false,
+        userName = identity?.Name ?? "",
+        displayName = GetDisplayName(ctx),
+        authorized = IsUserAuthorized(ctx),
+        bootstrapMode = (LoadSettings()?.AllowedAdGroups?.Count ?? 0) == 0
+    }, jsonOpts);
+}).RequireAuthorization();
 
-// GET /settings.html — Serve settings page
-app.MapGet("/settings.html", () => Results.File(
-    Path.Combine(app.Environment.WebRootPath, "settings.html"),
-    "text/html"));
+// GET /api/settings/auth — Return current auth config
+app.MapGet("/api/settings/auth", (HttpContext ctx) =>
+{
+    if (!IsUserAuthorized(ctx))
+        return Results.Json(new { error = "Access denied" }, jsonOpts, statusCode: 403);
+    var settings = LoadSettings();
+    return Results.Json(new
+    {
+        allowedAdGroups = settings?.AllowedAdGroups ?? new List<string>()
+    }, jsonOpts);
+}).RequireAuthorization();
+
+// POST /api/settings/auth — Save auth config
+app.MapPost("/api/settings/auth", async (HttpContext ctx) =>
+{
+    if (!IsUserAuthorized(ctx))
+        return Results.Json(new { error = "Access denied" }, jsonOpts, statusCode: 403);
+
+    try
+    {
+        var body = await JsonSerializer.DeserializeAsync<SaveAuthSettingsRequest>(ctx.Request.Body, jsonOpts);
+        if (body == null)
+            return Results.BadRequest(new { error = "Invalid request body" });
+
+        var settings = LoadSettings() ?? new ConnectionSettings();
+        settings.AllowedAdGroups = body.AllowedAdGroups?
+            .Where(g => !string.IsNullOrWhiteSpace(g))
+            .Select(g => g.Trim())
+            .ToList() ?? new List<string>();
+
+        var json = JsonSerializer.Serialize(settings, jsonOpts);
+        await File.WriteAllTextAsync(connectionsFile, json);
+        cachedSettings = settings;
+
+        return Results.Json(new { success = true, message = "Access control settings saved." }, jsonOpts);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { error = ex.Message }, jsonOpts, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+// GET /api/settings/auth/browse-groups — Search AD for groups
+app.MapGet("/api/settings/auth/browse-groups", (HttpRequest request) =>
+{
+    var search = request.Query["q"].FirstOrDefault() ?? "";
+    if (search.Length < 2)
+        return Results.Json(new { groups = new List<object>(), message = "Type at least 2 characters to search." }, jsonOpts);
+
+    try
+    {
+        var results = new List<object>();
+        using var entry = new DirectoryEntry("LDAP://RootDSE");
+        var defaultNamingContext = entry.Properties["defaultNamingContext"]?.Value?.ToString() ?? "";
+        using var searchRoot = new DirectoryEntry($"LDAP://{defaultNamingContext}");
+        using var searcher = new DirectorySearcher(searchRoot)
+        {
+            Filter = $"(&(objectCategory=group)(cn=*{EscapeLdapFilter(search)}*))",
+            SizeLimit = 50,
+            PageSize = 50
+        };
+        searcher.PropertiesToLoad.AddRange(new[] { "cn", "distinguishedName", "description" });
+
+        using var searchResults = searcher.FindAll();
+        foreach (SearchResult sr in searchResults)
+        {
+            var cn = sr.Properties["cn"]?.Count > 0 ? sr.Properties["cn"][0]?.ToString() ?? "" : "";
+            var dn = sr.Properties["distinguishedName"]?.Count > 0 ? sr.Properties["distinguishedName"][0]?.ToString() ?? "" : "";
+            var desc = sr.Properties["description"]?.Count > 0 ? sr.Properties["description"][0]?.ToString() ?? "" : "";
+
+            // Extract domain from DN (e.g., DC=ad,DC=contoso,DC=com → AD)
+            var domain = "";
+            var dcMatch = System.Text.RegularExpressions.Regex.Match(dn, @"DC=([^,]+)");
+            if (dcMatch.Success) domain = dcMatch.Groups[1].Value.ToUpper();
+
+            results.Add(new
+            {
+                name = cn,
+                fullName = !string.IsNullOrEmpty(domain) ? $"{domain}\\{cn}" : cn,
+                description = desc
+            });
+        }
+
+        results.Sort((a, b) => string.Compare(
+            ((dynamic)a).name, ((dynamic)b).name, StringComparison.OrdinalIgnoreCase));
+
+        return Results.Json(new { groups = results }, jsonOpts);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { groups = new List<object>(), message = $"AD lookup failed: {ex.Message}" }, jsonOpts);
+    }
+}).RequireAuthorization();
+
+// GET / — Serve index.html (requires auth + group check)
+app.MapGet("/", (HttpContext ctx) =>
+{
+    if (!IsUserAuthorized(ctx))
+        return Results.Text("<html><body style='font-family:Inter,sans-serif;padding:40px;'><h2>Access Denied</h2><p>You do not have permission to view this report. Contact your administrator to be added to the authorized group.</p><p>Logged in as: " + System.Net.WebUtility.HtmlEncode(ctx.User.Identity?.Name ?? "") + "</p></body></html>", "text/html");
+    return Results.File(
+        Path.Combine(app.Environment.WebRootPath, "index.html"),
+        "text/html");
+}).RequireAuthorization();
+
+// GET /settings.html — Serve settings page (requires auth, group check in bootstrap-aware mode)
+app.MapGet("/settings.html", (HttpContext ctx) =>
+{
+    if (!IsUserAuthorized(ctx))
+        return Results.Text("<html><body style='font-family:Inter,sans-serif;padding:40px;'><h2>Access Denied</h2><p>You do not have permission to access settings. Contact your administrator.</p><p>Logged in as: " + System.Net.WebUtility.HtmlEncode(ctx.User.Identity?.Name ?? "") + "</p></body></html>", "text/html");
+    return Results.File(
+        Path.Combine(app.Environment.WebRootPath, "settings.html"),
+        "text/html");
+}).RequireAuthorization();
 
 // GET /api/settings — Return current settings (no passwords)
 app.MapGet("/api/settings", () =>
@@ -109,6 +273,9 @@ app.MapGet("/api/settings", () =>
             appEnhancer = (object?)null
         }, jsonOpts);
     }
+
+    // List which workflows have mappings configured
+    var configuredWorkflows = settings.WorkflowMappings?.Keys.Select(int.Parse).ToList() ?? new List<int>();
 
     return Results.Json(new
     {
@@ -126,9 +293,10 @@ app.MapGet("/api/settings", () =>
             database = settings.AppEnhancer.Database,
             username = settings.AppEnhancer.Username,
             hasPassword = !string.IsNullOrEmpty(settings.AppEnhancer.EncryptedPassword)
-        }
+        },
+        configuredWorkflows
     }, jsonOpts);
-});
+}).RequireAuthorization();
 
 // POST /api/settings — Save connection settings
 app.MapPost("/api/settings", async (HttpRequest request) =>
@@ -161,7 +329,9 @@ app.MapPost("/api/settings", async (HttpRequest request) =>
                 EncryptedPassword = !string.IsNullOrEmpty(body.AppEnhancer?.Password)
                     ? EncryptPassword(body.AppEnhancer!.Password!)
                     : existing?.AppEnhancer?.EncryptedPassword ?? ""
-            }
+            },
+            WorkflowMappings = existing?.WorkflowMappings,
+            AllowedAdGroups = existing?.AllowedAdGroups
         };
 
         var json = JsonSerializer.Serialize(settings, jsonOpts);
@@ -174,7 +344,7 @@ app.MapPost("/api/settings", async (HttpRequest request) =>
     {
         return Results.Json(new { error = ex.Message }, jsonOpts, statusCode: 500);
     }
-});
+}).RequireAuthorization();
 
 // POST /api/settings/test — Test a database connection
 app.MapPost("/api/settings/test", async (HttpRequest request) =>
@@ -209,7 +379,7 @@ app.MapPost("/api/settings/test", async (HttpRequest request) =>
     {
         return Results.Json(new { success = false, message = $"Error: {ex.Message}" }, jsonOpts);
     }
-});
+}).RequireAuthorization();
 
 // GET /api/workflows — Return all workflows
 app.MapGet("/api/workflows", () =>
@@ -218,7 +388,7 @@ app.MapGet("/api/workflows", () =>
     {
         using var conn = GetWfConnection();
         using var cmd = new SqlCommand(
-            "SELECT WorkflowID, WorkflowName, IntegrationSettings FROM wf_Workflows ORDER BY WorkflowID",
+            "SELECT WorkflowID, WorkflowName, IntegrationSettings FROM wf_Workflows WHERE IsEnabled = 1 ORDER BY WorkflowID",
             conn);
         using var reader = cmd.ExecuteReader();
 
@@ -243,7 +413,164 @@ app.MapGet("/api/workflows", () =>
     {
         return Results.Json(new { error = ex.Message }, jsonOpts, statusCode: 500);
     }
-});
+}).RequireAuthorization();
+
+// GET /api/workflows/{id}/fields — Return workflow field mappings
+app.MapGet("/api/workflows/{id}/fields", (int id) =>
+{
+    try
+    {
+        using var conn = GetWfConnection();
+        using var cmd = new SqlCommand(
+            "SELECT FieldName, ColumnName, MappedFieldName FROM wf_WorkflowFields WHERE WorkflowID = @wfId ORDER BY ColumnName",
+            conn);
+        cmd.Parameters.AddWithValue("@wfId", id);
+        using var reader = cmd.ExecuteReader();
+
+        var result = new List<object>();
+        while (reader.Read())
+        {
+            result.Add(new
+            {
+                fieldName = reader.IsDBNull(0) ? "" : reader.GetString(0),
+                columnName = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                mappedFieldName = reader.IsDBNull(2) ? "" : reader.GetString(2)
+            });
+        }
+
+        return Results.Json(result, jsonOpts);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { error = ex.Message }, jsonOpts, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+// GET /api/workflows/{id}/queues — Return workflow queues
+app.MapGet("/api/workflows/{id}/queues", (int id) =>
+{
+    try
+    {
+        using var conn = GetWfConnection();
+        using var cmd = new SqlCommand(
+            "SELECT QueueID, QueueName FROM wf_Queues WHERE WorkflowID = @wfId ORDER BY QueueID",
+            conn);
+        cmd.Parameters.AddWithValue("@wfId", id);
+        using var reader = cmd.ExecuteReader();
+
+        var result = new List<object>();
+        while (reader.Read())
+        {
+            result.Add(new
+            {
+                queueId = Convert.ToInt32(reader[0]),
+                queueName = reader.IsDBNull(1) ? "" : reader.GetString(1)
+            });
+        }
+
+        return Results.Json(result, jsonOpts);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { error = ex.Message }, jsonOpts, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+// GET /api/settings/workflow-mapping/{id} — Return saved mapping for a workflow
+app.MapGet("/api/settings/workflow-mapping/{id}", (int id) =>
+{
+    var settings = LoadSettings();
+    var key = id.ToString();
+    if (settings?.WorkflowMappings != null && settings.WorkflowMappings.TryGetValue(key, out var mapping))
+    {
+        return Results.Json(new { configured = true, mapping }, jsonOpts);
+    }
+    return Results.Json(new { configured = false }, jsonOpts);
+}).RequireAuthorization();
+
+// POST /api/settings/workflow-mapping/{id} — Save mapping for a workflow
+app.MapPost("/api/settings/workflow-mapping/{id}", async (int id, HttpRequest request) =>
+{
+    try
+    {
+        var body = await JsonSerializer.DeserializeAsync<SaveWorkflowMappingRequest>(request.Body, jsonOpts);
+        if (body == null)
+            return Results.BadRequest(new { error = "Invalid request body" });
+
+        // Validate column names to prevent SQL injection (must match f\d+ pattern)
+        var safeColPattern = new System.Text.RegularExpressions.Regex(@"^[A-Za-z_][A-Za-z0-9_]{0,127}$");
+        foreach (var kv in body.FieldMappings)
+        {
+            if (!safeColPattern.IsMatch(kv.Value))
+                return Results.BadRequest(new { error = $"Invalid column name '{kv.Value}'. Column names must be valid identifiers." });
+        }
+
+        var settings = LoadSettings() ?? new ConnectionSettings();
+        settings.WorkflowMappings ??= new Dictionary<string, WorkflowMapping>();
+
+        settings.WorkflowMappings[id.ToString()] = new WorkflowMapping
+        {
+            WorkflowId = id,
+            WorkflowName = body.WorkflowName,
+            FieldMappings = body.FieldMappings,
+            SiteMgrQueueIds = body.SiteMgrQueueIds,
+            SeniorApprovalQueueIds = body.SeniorApprovalQueueIds
+        };
+
+        var json = JsonSerializer.Serialize(settings, jsonOpts);
+        await File.WriteAllTextAsync(connectionsFile, json);
+        cachedSettings = settings;
+
+        return Results.Json(new { success = true, message = "Workflow mapping saved." }, jsonOpts);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { error = ex.Message }, jsonOpts, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+// DELETE /api/settings/workflow-mapping/{id} — Remove mapping for a workflow
+app.MapDelete("/api/settings/workflow-mapping/{id}", async (int id) =>
+{
+    try
+    {
+        var settings = LoadSettings();
+        if (settings?.WorkflowMappings == null || !settings.WorkflowMappings.ContainsKey(id.ToString()))
+            return Results.Json(new { success = false, error = "No mapping found for this workflow." }, jsonOpts);
+
+        settings.WorkflowMappings.Remove(id.ToString());
+
+        var json = JsonSerializer.Serialize(settings, jsonOpts);
+        await File.WriteAllTextAsync(connectionsFile, json);
+        cachedSettings = settings;
+
+        return Results.Json(new { success = true, message = "Workflow mapping removed." }, jsonOpts);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { error = ex.Message }, jsonOpts, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+// ── Column validation helper ─────────────────────────────────────────────
+var colPattern = new Regex(@"^[A-Za-z_][A-Za-z0-9_]{0,127}$");
+string SafeCol(string col, string fallback)
+{
+    if (colPattern.IsMatch(col)) return $"[{col}]";
+    if (colPattern.IsMatch(fallback)) return $"[{fallback}]";
+    return "NULL";
+}
+
+// ── Default mappings (backward-compatible with Workflow 7) ───────────────
+WorkflowMapping? GetMappingForWorkflow(int wfId)
+{
+    var settings = LoadSettings();
+    var key = wfId.ToString();
+    if (settings?.WorkflowMappings != null && settings.WorkflowMappings.TryGetValue(key, out var mapping))
+        return mapping;
+
+    return null;
+}
 
 // GET /api/reports/ap-productivity — Main report endpoint
 app.MapGet("/api/reports/ap-productivity", (HttpRequest request) =>
@@ -260,16 +587,119 @@ app.MapGet("/api/reports/ap-productivity", (HttpRequest request) =>
     var wiTable = $"wf_WorkItems_{wfIdInt}";
     var winstTable = $"wf_WorkInstances_{wfIdInt}";
 
+    // Load dynamic field/queue mapping
+    var mapping = GetMappingForWorkflow(wfIdInt);
+    if (mapping == null)
+        return Results.Json(new { error = "No field mapping configured for this workflow. Please configure it in Settings > Workflow Field Mapping." }, jsonOpts, statusCode: 400);
+
+    var requiredMappings = new[] { "VendorName", "InvoiceNumber", "Amount", "InvoiceDate" };
+    var missingMappings = requiredMappings.Where(k => !mapping.FieldMappings.ContainsKey(k) || string.IsNullOrEmpty(mapping.FieldMappings[k])).ToList();
+    if (missingMappings.Count > 0)
+        return Results.Json(new { error = $"Workflow mapping is incomplete. Missing: {string.Join(", ", missingMappings)}. Please update it in Settings." }, jsonOpts, statusCode: 400);
+
+    var fVendor = SafeCol(mapping.FieldMappings["VendorName"], "");
+    var fInvNum = SafeCol(mapping.FieldMappings["InvoiceNumber"], "");
+    var fAmount = SafeCol(mapping.FieldMappings["Amount"], "");
+    var fInvDate = SafeCol(mapping.FieldMappings["InvoiceDate"], "");
+    var rawDocId = mapping.FieldMappings.GetValueOrDefault("DocID", "");
+    var rawStatus = mapping.FieldMappings.GetValueOrDefault("WorkflowStatus", "");
+    var rawQueue = mapping.FieldMappings.GetValueOrDefault("WorkflowQueue", "");
+    var fDocId = string.IsNullOrEmpty(rawDocId) ? "NULL" : $"wi.{SafeCol(rawDocId, "")}";
+    var fStatus = string.IsNullOrEmpty(rawStatus) ? "NULL" : $"wi.{SafeCol(rawStatus, "")}";
+    var fQueue = string.IsNullOrEmpty(rawQueue) ? "NULL" : $"wi.{SafeCol(rawQueue, "")}";
+
+    var siteMgrQueueIds = mapping.SiteMgrQueueIds.Count > 0
+        ? string.Join(",", mapping.SiteMgrQueueIds)
+        : "-1";
+    var seniorQueueIds = mapping.SeniorApprovalQueueIds.Count > 0
+        ? string.Join(",", mapping.SeniorApprovalQueueIds)
+        : "-1";
+
     try
     {
         using var conn = GetWfConnection();
 
-        // Date filter clause
-        var dateCol = dateBasis == "invoice" ? "wi.f24" : "wi.StartTime";
-
-        var whereClauses = new List<string>();
         var sqlParams = new List<SqlParameter>();
 
+        // Build the inner query (CTE) with dynamic columns
+        var innerSql = $@"
+        SELECT
+            wi.WorkItemID,
+            wi.StartTime       AS SystemEntryDate,
+            wi.EndTime          AS WorkItemEndTime,
+            wi.Complete         AS WorkItemComplete,
+            wi.{fVendor}        AS VendorName,
+            wi.{fInvNum}        AS InvoiceNumber,
+            wi.{fAmount}        AS Amount,
+            wi.{fInvDate}       AS InvoiceDate,
+            {fDocId}             AS DocID,
+            {fStatus}            AS WorkflowStatus,
+            {fQueue}             AS WorkflowQueue,
+
+            proc_u.FullName     AS APProcessor,
+            proc_inst.StartTime AS ProcStartTime,
+
+            appr_u.FullName     AS SiteMgrApprover,
+            appr_inst.StartTime AS ApprStartTime,
+            appr_inst.EndTime   AS SiteMgrDate,
+
+            sr_u.FullName       AS APApprover,
+            sr_inst.StartTime   AS SrStartTime,
+            sr_inst.EndTime     AS APApprovalDate,
+
+            COALESCE(appr_inst.Note, '') + CASE WHEN appr_inst.Note IS NOT NULL AND sr_inst.Note IS NOT NULL THEN '; ' ELSE '' END + COALESCE(sr_inst.Note, '') AS Comments,
+
+            q.QueueName         AS CurrentQueue
+
+        FROM {wiTable} wi
+
+        OUTER APPLY (
+            SELECT TOP 1 inst.Owner, inst.StartTime
+            FROM {winstTable} inst
+            WHERE inst.WorkItemID = wi.WorkItemID
+              AND inst.Owner IS NOT NULL
+              AND inst.Owner != 0
+            ORDER BY inst.StartTime ASC
+        ) proc_inst
+        LEFT JOIN wf_Users proc_u ON proc_u.UserID = proc_inst.Owner
+
+        OUTER APPLY (
+            SELECT TOP 1 inst.Owner, inst.StartTime, inst.EndTime, inst.Note
+            FROM {winstTable} inst
+            WHERE inst.WorkItemID = wi.WorkItemID
+              AND inst.QueueID IN ({siteMgrQueueIds})
+            ORDER BY inst.StartTime DESC
+        ) appr_inst
+        LEFT JOIN wf_Users appr_u ON appr_u.UserID = appr_inst.Owner
+
+        OUTER APPLY (
+            SELECT TOP 1 inst.Owner, inst.StartTime, inst.EndTime, inst.Note
+            FROM {winstTable} inst
+            WHERE inst.WorkItemID = wi.WorkItemID
+              AND inst.QueueID IN ({seniorQueueIds})
+            ORDER BY inst.StartTime DESC
+        ) sr_inst
+        LEFT JOIN wf_Users sr_u ON sr_u.UserID = sr_inst.Owner
+
+        OUTER APPLY (
+            SELECT TOP 1 inst.QueueID
+            FROM {winstTable} inst
+            WHERE inst.WorkItemID = wi.WorkItemID
+            ORDER BY inst.StartTime DESC
+        ) latest_inst
+        LEFT JOIN wf_Queues q ON q.QueueID = latest_inst.QueueID AND q.WorkflowID = {wfIdInt}";
+
+        // Date filter — use CTE so we can filter on computed columns (SiteMgrDate, APApprovalDate)
+        string dateCol;
+        switch (dateBasis)
+        {
+            case "invoice":       dateCol = "r.InvoiceDate"; break;
+            case "siteMgrApproval": dateCol = "r.SiteMgrDate"; break;
+            case "apApproval":    dateCol = "r.APApprovalDate"; break;
+            default:              dateCol = "r.SystemEntryDate"; break;
+        }
+
+        var whereClauses = new List<string>();
         if (!string.IsNullOrEmpty(start))
         {
             whereClauses.Add($"{dateCol} >= @start");
@@ -286,83 +716,12 @@ app.MapGet("/api/reports/ap-productivity", (HttpRequest request) =>
             : "";
 
         var sql = $@"
-        SELECT
-            wi.WorkItemID,
-            wi.StartTime       AS SystemEntryDate,
-            wi.EndTime          AS WorkItemEndTime,
-            wi.Complete         AS WorkItemComplete,
-            wi.f14              AS VendorName,
-            wi.f15              AS InvoiceNumber,
-            wi.f16              AS Amount,
-            wi.f24              AS InvoiceDate,
-            wi.f11              AS DocID,
-            wi.f18              AS WorkflowStatus,
-            wi.f19              AS WorkflowQueue,
-
-            -- AP Processor: first instance owner (earliest instance by StartTime)
-            proc_u.FullName     AS APProcessor,
-            proc_inst.StartTime AS ProcStartTime,
-
-            -- Site Mgr Approver: instance in QueueID 1 or 6
-            appr_u.FullName     AS SiteMgrApprover,
-            appr_inst.StartTime AS ApprStartTime,
-            appr_inst.EndTime   AS SiteMgrDate,
-
-            -- Senior Approver: instance in QueueID 2
-            sr_u.FullName       AS APApprover,
-            sr_inst.StartTime   AS SrStartTime,
-            sr_inst.EndTime     AS APApprovalDate,
-
-            -- Notes: combine notes from instances
-            COALESCE(appr_inst.Note, '') + CASE WHEN appr_inst.Note IS NOT NULL AND sr_inst.Note IS NOT NULL THEN '; ' ELSE '' END + COALESCE(sr_inst.Note, '') AS Comments,
-
-            -- Current queue
-            q.QueueName         AS CurrentQueue
-
-        FROM {wiTable} wi
-
-        -- AP Processor: the owner of the earliest instance for this work item
-        OUTER APPLY (
-            SELECT TOP 1 inst.Owner, inst.StartTime
-            FROM {winstTable} inst
-            WHERE inst.WorkItemID = wi.WorkItemID
-              AND inst.Owner IS NOT NULL
-              AND inst.Owner != 0
-            ORDER BY inst.StartTime ASC
-        ) proc_inst
-        LEFT JOIN wf_Users proc_u ON proc_u.UserID = proc_inst.Owner
-
-        -- Site Mgr Approver: instance in approval queues (QueueID 1 or 6)
-        OUTER APPLY (
-            SELECT TOP 1 inst.Owner, inst.StartTime, inst.EndTime, inst.Note
-            FROM {winstTable} inst
-            WHERE inst.WorkItemID = wi.WorkItemID
-              AND inst.QueueID IN (1, 6)
-            ORDER BY inst.StartTime DESC
-        ) appr_inst
-        LEFT JOIN wf_Users appr_u ON appr_u.UserID = appr_inst.Owner
-
-        -- Senior Approver: instance in QueueID 2
-        OUTER APPLY (
-            SELECT TOP 1 inst.Owner, inst.StartTime, inst.EndTime, inst.Note
-            FROM {winstTable} inst
-            WHERE inst.WorkItemID = wi.WorkItemID
-              AND inst.QueueID = 2
-            ORDER BY inst.StartTime DESC
-        ) sr_inst
-        LEFT JOIN wf_Users sr_u ON sr_u.UserID = sr_inst.Owner
-
-        -- Current queue (latest instance)
-        OUTER APPLY (
-            SELECT TOP 1 inst.QueueID
-            FROM {winstTable} inst
-            WHERE inst.WorkItemID = wi.WorkItemID
-            ORDER BY inst.StartTime DESC
-        ) latest_inst
-        LEFT JOIN wf_Queues q ON q.QueueID = latest_inst.QueueID AND q.WorkflowID = {wfIdInt}
-
+        ;WITH cte AS (
+            {innerSql}
+        )
+        SELECT * FROM cte r
         {whereSql}
-        ORDER BY wi.StartTime DESC";
+        ORDER BY r.SystemEntryDate DESC";
 
         using var cmd = new SqlCommand(sql, conn);
         foreach (var p in sqlParams)
@@ -398,13 +757,9 @@ app.MapGet("/api/reports/ap-productivity", (HttpRequest request) =>
 
             var invoiceDate = reader.IsDBNull(reader.GetOrdinal("InvoiceDate")) ? (DateTime?)null : Convert.ToDateTime(reader["InvoiceDate"]);
 
-            // Mgr Days: days the approval step took
             int? mgrDays = DaysBetween(apprStartTime, siteMgrDate);
-
-            // AP Days: days the senior approval step took
             int? apDays = DaysBetween(srStartTime, apApprovalDate);
 
-            // Total Days: from workflow start to final approval (or today)
             int? totalDays;
             var finalDate = apApprovalDate ?? siteMgrDate ?? workItemEndTime;
             if (workItemComplete && finalDate.HasValue)
@@ -414,7 +769,7 @@ app.MapGet("/api/reports/ap-productivity", (HttpRequest request) =>
             else
                 totalDays = null;
 
-            if (totalDays.HasValue) totalDaysList.Add(totalDays.Value);
+            if (totalDays.HasValue && workItemComplete) totalDaysList.Add(totalDays.Value);
 
             var status = workItemComplete ? "Completed" : "In Progress";
 
@@ -467,7 +822,7 @@ app.MapGet("/api/reports/ap-productivity", (HttpRequest request) =>
     {
         return Results.Json(new { error = ex.Message }, jsonOpts, statusCode: 500);
     }
-});
+}).RequireAuthorization();
 
 // ── Auto-open browser ────────────────────────────────────────────────────────
 _ = Task.Run(async () =>
@@ -499,6 +854,16 @@ static int? DaysBetween(DateTime? startDt, DateTime? endDt)
     return Math.Max(days, 0);
 }
 
+static string EscapeLdapFilter(string input)
+{
+    return input
+        .Replace("\\", "\\5c")
+        .Replace("*", "\\2a")
+        .Replace("(", "\\28")
+        .Replace(")", "\\29")
+        .Replace("\0", "\\00");
+}
+
 // ── DTO classes ──────────────────────────────────────────────────────────────
 public class DbConnectionInfo
 {
@@ -512,6 +877,17 @@ public class ConnectionSettings
 {
     public DbConnectionInfo? Workflow { get; set; }
     public DbConnectionInfo? AppEnhancer { get; set; }
+    public Dictionary<string, WorkflowMapping>? WorkflowMappings { get; set; }
+    public List<string>? AllowedAdGroups { get; set; }
+}
+
+public class WorkflowMapping
+{
+    public int WorkflowId { get; set; }
+    public string WorkflowName { get; set; } = "";
+    public Dictionary<string, string> FieldMappings { get; set; } = new();
+    public List<int> SiteMgrQueueIds { get; set; } = new();
+    public List<int> SeniorApprovalQueueIds { get; set; } = new();
 }
 
 public class SaveSettingsConnectionInfo
@@ -534,4 +910,18 @@ public class TestConnectionRequest
     public string Database { get; set; } = "";
     public string Username { get; set; } = "";
     public string Password { get; set; } = "";
+}
+
+public class SaveWorkflowMappingRequest
+{
+    public int WorkflowId { get; set; }
+    public string WorkflowName { get; set; } = "";
+    public Dictionary<string, string> FieldMappings { get; set; } = new();
+    public List<int> SiteMgrQueueIds { get; set; } = new();
+    public List<int> SeniorApprovalQueueIds { get; set; } = new();
+}
+
+public class SaveAuthSettingsRequest
+{
+    public List<string>? AllowedAdGroups { get; set; }
 }

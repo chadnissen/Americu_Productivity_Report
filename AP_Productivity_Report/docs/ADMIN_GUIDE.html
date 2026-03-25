@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrator &amp; Installation Guide — AP Specialist Productivity Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html { scroll-behavior: smooth; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fb;
+      color: #1e293b;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+    .print-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+      z-index: 1000;
+      transition: background 0.2s;
+    }
+    .print-btn:hover { background: #1d4ed8; }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 50px 55px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 32px;
+      margin-bottom: 12px;
+    }
+    h4 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    p { margin-bottom: 14px; }
+    .subtitle {
+      font-size: 16px;
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    hr {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 36px 0;
+    }
+    ul, ol {
+      margin-bottom: 14px;
+      padding-left: 24px;
+    }
+    li { margin-bottom: 8px; }
+    li > ul, li > ol { margin-top: 8px; margin-bottom: 4px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    thead th {
+      background: #f1f5f9;
+      font-weight: 600;
+      text-align: left;
+      padding: 10px 14px;
+      border: 1px solid #e2e8f0;
+    }
+    tbody td {
+      padding: 10px 14px;
+      border: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    pre {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .callout {
+      border-left: 4px solid;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .callout-note {
+      border-color: #2563eb;
+      background: #dbeafe;
+    }
+    .callout-important {
+      border-color: #d97706;
+      background: #fef3c7;
+    }
+    .toc { margin-bottom: 20px; }
+    .toc ul { list-style: none; padding-left: 0; }
+    .toc ul ul { padding-left: 20px; }
+    .toc li { margin-bottom: 6px; }
+    .toc a { font-size: 15px; }
+    .toc .section-label {
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      display: block;
+    }
+    em { color: #64748b; }
+    @media print {
+      .print-btn { display: none; }
+      body { background: #fff; }
+      .container { margin: 0; padding: 0; }
+      .card { box-shadow: none; padding: 20px 0; }
+      table { page-break-inside: avoid; }
+      h2, h3, h4 { page-break-after: avoid; }
+      .callout-note, .callout-important { background: none; }
+      tbody tr:nth-child(even) { background: none; }
+      thead th { background: none; }
+    }
+  </style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">Print this guide</button>
+
+<div class="container">
+<div class="card">
+
+<h1 id="administrator-installation-guide">Administrator &amp; Installation Guide</h1>
+<p class="subtitle">AP Specialist Productivity Report &mdash; Complete guide covering installation, deployment, configuration, and ongoing administration.</p>
+
+<hr>
+
+<h2 id="table-of-contents">Table of Contents</h2>
+<nav class="toc">
+<ul>
+  <li><span class="section-label">Installation &amp; Deployment</span></li>
+  <li><a href="#what-you-need">What You Need</a></li>
+  <li><a href="#option-a-standalone-installation-simplest">Option A: Standalone Installation (Simplest)</a></li>
+  <li><a href="#option-b-iis-installation-recommended-for-production">Option B: IIS Installation (Recommended for Production)</a></li>
+  <li><a href="#first-time-setup">First-Time Setup</a></li>
+  <li><a href="#updating-the-application">Updating the Application</a></li>
+  <li><a href="#uninstalling">Uninstalling</a></li>
+  <li><a href="#common-installation-issues">Common Installation Issues</a></li>
+
+  <li><span class="section-label">Administration</span></li>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#accessing-settings">Accessing Settings</a></li>
+  <li><a href="#database-connections">Database Connections</a></li>
+  <li><a href="#workflow-configuration">Workflow Configuration</a></li>
+  <li><a href="#access-control">Access Control</a></li>
+  <li><a href="#routine-maintenance">Routine Maintenance</a></li>
+  <li><a href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</nav>
+
+<hr>
+
+<!-- ===== PART 1: INSTALLATION (from INSTALL_GUIDE.md) ===== -->
+
+<h2 id="what-you-need">What You Need</h2>
+
+<p>Before you begin, make sure you have the following:</p>
+
+<h3 id="for-a-standalone-installation-option-a">For a Standalone Installation (Option A)</h3>
+
+<ul>
+  <li><strong>A Windows computer</strong> &mdash; Windows 10, Windows 11, or Windows Server 2016 or later. That's it. The application includes everything it needs to run; you do not need to install any additional software.</li>
+  <li><strong>Network access to your SQL Server database(s)</strong> &mdash; The machine running the application must be able to reach the SQL Server(s) that hold your ECMT Workflow data.</li>
+</ul>
+
+<h3 id="for-an-iis-installation-option-b">For an IIS Installation (Option B)</h3>
+
+<ul>
+  <li><strong>Windows Server with IIS enabled</strong> &mdash; IIS (Internet Information Services) is Microsoft's built-in web server. If it is not already enabled on your server, you can turn it on through Server Manager &gt; Add Roles and Features &gt; Web Server (IIS).</li>
+  <li><strong>The .NET 8 Hosting Bundle</strong> &mdash; This is a small installer from Microsoft that allows IIS to run the application. Download it here: <a href="https://dotnet.microsoft.com/download/dotnet/8.0">https://dotnet.microsoft.com/download/dotnet/8.0</a>. Look for <strong>"Hosting Bundle"</strong> under the ASP.NET Core Runtime section. This is a one-time install &mdash; just run the installer and restart IIS (details below).</li>
+  <li><strong>Network access to your SQL Server database(s)</strong> &mdash; Same as above.</li>
+</ul>
+
+<hr>
+
+<h2 id="option-a-standalone-installation-simplest">Option A: Standalone Installation (Simplest)</h2>
+
+<p>This is the easiest way to get the application running. It is ideal for evaluation, demos, or single-user scenarios. No installation is required &mdash; you just copy files and run.</p>
+
+<h3 id="steps">Steps</h3>
+
+<ol>
+  <li>
+    <p><strong>Copy the application folder</strong> to the machine where you want to run it. You should have received a folder (often called <code>publish</code>) containing <code>AP_Productivity_Report.exe</code> and supporting files. Copy the entire folder to any location you like &mdash; for example, <code>C:\APProductivityReport\</code>.</p>
+  </li>
+  <li>
+    <p><strong>Run the application.</strong> Double-click <code>AP_Productivity_Report.exe</code>. A console window will appear showing the application starting up.</p>
+  </li>
+  <li>
+    <p><strong>Open your web browser</strong> and go to:</p>
+    <pre><code>http://localhost:5000</code></pre>
+    <p>You should see the application load.</p>
+  </li>
+  <li>
+    <p><strong>Complete the first-time setup</strong> (see <a href="#first-time-setup">First-Time Setup</a> below).</p>
+  </li>
+</ol>
+
+<h3 id="changing-the-default-port">Changing the Default Port</h3>
+
+<p>By default, the application listens on port 5000. If that port is already in use or you prefer a different one, open a Command Prompt in the application folder and run:</p>
+
+<pre><code>set ASPNETCORE_URLS=http://0.0.0.0:8080
+AP_Productivity_Report.exe</code></pre>
+
+<p>Replace <code>8080</code> with whatever port number you prefer. Then open your browser to <code>http://localhost:8080</code> instead.</p>
+
+<div class="callout callout-note">
+  <strong>Note:</strong> There is no install or uninstall process for the standalone version. To remove it, simply close the application and delete the folder.
+</div>
+
+<hr>
+
+<h2 id="option-b-iis-installation-recommended-for-production">Option B: IIS Installation (Recommended for Production)</h2>
+
+<p>IIS is the recommended approach when multiple users will access the application over the network. IIS handles things like SSL certificates, Windows single sign-on, and running the application reliably as a background service.</p>
+
+<h3 id="step-1-install-the-net-8-hosting-bundle">Step 1: Install the .NET 8 Hosting Bundle</h3>
+
+<p>Before IIS can run the application, you need to install a small component from Microsoft called the Hosting Bundle.</p>
+
+<ol>
+  <li>On your server, open a browser and go to <a href="https://dotnet.microsoft.com/download/dotnet/8.0">https://dotnet.microsoft.com/download/dotnet/8.0</a>.</li>
+  <li>Under <strong>ASP.NET Core Runtime</strong>, look for the <strong>Hosting Bundle</strong> download and run the installer.</li>
+  <li>Follow the prompts &mdash; the defaults are fine.</li>
+  <li><strong>After the installer finishes, restart IIS.</strong> Open a Command Prompt as Administrator and run:
+    <pre><code>iisreset</code></pre>
+    <p>Alternatively, you can restart the server entirely.</p>
+  </li>
+</ol>
+
+<div class="callout callout-important">
+  <strong>Important:</strong> If you skip the IIS restart, the application will not work and you will see a 500.19 error.
+</div>
+
+<h3 id="step-2-copy-the-application-files-to-the-server">Step 2: Copy the Application Files to the Server</h3>
+
+<p>You should have received a set of application files built for IIS deployment (this is different from the standalone .exe &mdash; it will be a folder of smaller files including <code>.dll</code> files and a <code>web.config</code>).</p>
+
+<ol>
+  <li>Create a folder on the server for the application &mdash; for example: <code>C:\inetpub\APProductivityReport\</code></li>
+  <li>Copy all the application files into that folder.</li>
+</ol>
+
+<h3 id="step-3-create-the-site-or-application-in-iis-manager">Step 3: Create the Site or Application in IIS Manager</h3>
+
+<p>You have two options here. Choose the one that best fits your environment.</p>
+
+<h4 id="option-1-create-a-new-iis-website">Option 1: Create a New IIS Website</h4>
+
+<p>Use this if the application will have its own URL or port (for example, <code>http://servername:8080</code>).</p>
+
+<ol>
+  <li>Open <strong>IIS Manager</strong> (search for "IIS" in the Start menu or run <code>inetmgr</code>).</li>
+  <li>In the left panel, right-click <strong>Sites</strong> and choose <strong>Add Website</strong>.</li>
+  <li>Fill in the fields:
+    <ul>
+      <li><strong>Site name:</strong> <code>AP Productivity Report</code></li>
+      <li><strong>Physical path:</strong> Browse to the folder where you copied the files (e.g., <code>C:\inetpub\APProductivityReport</code>)</li>
+      <li><strong>Port:</strong> Choose a port number (e.g., <code>8080</code> for HTTP, or <code>443</code> if you are configuring HTTPS)</li>
+    </ul>
+  </li>
+  <li>Click <strong>OK</strong>.</li>
+</ol>
+
+<h4 id="option-2-add-as-a-sub-application-under-an-existing-site">Option 2: Add as a Sub-Application Under an Existing Site</h4>
+
+<p>Use this if you want the application to be accessible as a path under an existing website (for example, <code>https://servername/WorkflowReport</code>).</p>
+
+<ol>
+  <li>Open <strong>IIS Manager</strong>.</li>
+  <li>In the left panel, expand the site you want to add to (e.g., <strong>Default Web Site</strong>).</li>
+  <li>Right-click the site and choose <strong>Add Application</strong>.</li>
+  <li>Fill in the fields:
+    <ul>
+      <li><strong>Alias:</strong> The path name you want (e.g., <code>WorkflowReport</code>)</li>
+      <li><strong>Physical path:</strong> Browse to the folder where you copied the files</li>
+    </ul>
+  </li>
+  <li>Click <strong>OK</strong>.</li>
+</ol>
+
+<h3 id="step-4-configure-the-application-pool">Step 4: Configure the Application Pool</h3>
+
+<p>The Application Pool controls how IIS runs the application. This step is important.</p>
+
+<ol>
+  <li>In <strong>IIS Manager</strong>, click <strong>Application Pools</strong> in the left panel.</li>
+  <li>Find the pool associated with your site (it usually has the same name as the site you just created).</li>
+  <li>Click on the pool name, then click <strong>Basic Settings</strong> in the right panel.</li>
+  <li>Set <strong>.NET CLR Version</strong> to <strong>"No Managed Code"</strong>.
+    <ul>
+      <li>This tells IIS that the application manages its own .NET runtime &mdash; IIS does not need to load one.</li>
+    </ul>
+  </li>
+  <li>Click <strong>OK</strong>.</li>
+  <li>With the pool still selected, click <strong>Advanced Settings</strong> in the right panel.</li>
+  <li>Scroll down to the <strong>Process Model</strong> section.</li>
+  <li>Set <strong>Load User Profile</strong> to <strong>True</strong>.</li>
+</ol>
+
+<div class="callout callout-important">
+  <strong>Important:</strong> If "Load User Profile" is not set to True, the application will not be able to save database passwords securely. You will see a DPAPI encryption error.
+</div>
+
+<h3 id="step-5-set-folder-permissions">Step 5: Set Folder Permissions</h3>
+
+<p>The application needs permission to write to its own folder (to save its configuration file). Here is how to grant that permission:</p>
+
+<ol>
+  <li>Open <strong>File Explorer</strong> and navigate to the application folder (e.g., <code>C:\inetpub\APProductivityReport</code>).</li>
+  <li><strong>Right-click</strong> the folder and choose <strong>Properties</strong>.</li>
+  <li>Go to the <strong>Security</strong> tab.</li>
+  <li>Click <strong>Edit</strong>, then click <strong>Add</strong>.</li>
+  <li>In the dialog that appears, <strong>click the "Locations" button</strong>. This is a critical step.</li>
+</ol>
+
+<div class="callout callout-important">
+  <strong>Important:</strong> In the Locations dialog, select <strong>the local server name</strong> &mdash; not the domain name. Application Pool identities are local accounts, not domain accounts. If you search the domain, Windows will not find the account.
+</div>
+
+<ol start="6">
+  <li>In the "Enter the object names" box, type:
+    <pre><code>IIS AppPool\AP Productivity Report</code></pre>
+    <p>Replace <code>AP Productivity Report</code> with the actual name of your Application Pool.</p>
+  </li>
+  <li>Click <strong>Check Names</strong>. The name should become underlined, confirming it was found.</li>
+  <li>Click <strong>OK</strong> to add the account.</li>
+  <li>With the new account selected, check the <strong>Modify</strong> permission checkbox.</li>
+  <li>Click <strong>OK</strong> on all dialogs to apply.</li>
+</ol>
+
+<h3 id="step-6-enable-windows-authentication">Step 6: Enable Windows Authentication</h3>
+
+<p>Windows Authentication allows users to sign in automatically using their Windows credentials &mdash; no separate login page needed.</p>
+
+<ol>
+  <li>In <strong>IIS Manager</strong>, select your site or application in the left panel.</li>
+  <li>In the center panel, double-click <strong>Authentication</strong> (under the IIS section).</li>
+  <li>Set <strong>Windows Authentication</strong> to <strong>Enabled</strong> (right-click it and choose Enable, or select it and click Enable in the right panel).</li>
+  <li>Set <strong>Anonymous Authentication</strong> to <strong>Disabled</strong>.</li>
+</ol>
+
+<div class="callout callout-note">
+  <strong>Note:</strong> With Windows Authentication enabled, users on the network will be signed in automatically. Their Windows display name will appear in the report header.
+</div>
+
+<h3 id="step-7-test-it">Step 7: Test It</h3>
+
+<ol>
+  <li>Open a browser on the server (or from another machine on the network).</li>
+  <li>Navigate to your site URL &mdash; for example:
+    <ul>
+      <li><code>http://servername:8080</code> (if you created a new website on port 8080)</li>
+      <li><code>https://servername/WorkflowReport</code> (if you added a sub-application)</li>
+    </ul>
+  </li>
+  <li>You should see the application load. Proceed to <a href="#first-time-setup">First-Time Setup</a>.</li>
+</ol>
+
+<hr>
+
+<h2 id="first-time-setup">First-Time Setup</h2>
+
+<p>When you open the application for the first time, you will see a banner indicating that database connections have not been configured yet. Click the gear icon or navigate to the Settings page to set up:</p>
+
+<ul>
+  <li><strong>Database connections</strong> &mdash; Enter your SQL Server details and test each connection.</li>
+  <li><strong>Workflow mappings</strong> &mdash; Select a workflow and map its fields so the report knows which columns to use.</li>
+  <li><strong>Access control</strong> (optional) &mdash; Restrict access to specific Active Directory groups.</li>
+</ul>
+
+<p>For detailed instructions on configuring these settings, see the <a href="#database-connections">Database Connections</a>, <a href="#workflow-configuration">Workflow Configuration</a>, and <a href="#access-control">Access Control</a> sections below.</p>
+
+<hr>
+
+<h2 id="updating-the-application">Updating the Application</h2>
+
+<p>When a new version of the application is available, follow these steps to update.</p>
+
+<h3 id="standalone-update">Standalone Update</h3>
+
+<ol>
+  <li><strong>Close the application</strong> by closing the console window.</li>
+  <li><strong>Replace the files</strong> in the application folder with the new version.</li>
+  <li><strong>Restart</strong> by double-clicking <code>AP_Productivity_Report.exe</code>.</li>
+</ol>
+
+<h3 id="iis-update">IIS Update</h3>
+
+<ol>
+  <li>
+    <p><strong>Stop the Application Pool.</strong> In IIS Manager, go to Application Pools, select the pool, and click <strong>Stop</strong>. Alternatively, you can place a file named <code>app_offline.htm</code> in the application folder &mdash; IIS will immediately take the application offline and show that page to users instead.</p>
+  </li>
+  <li>
+    <p><strong>Copy the new files</strong> into the application folder, overwriting the existing ones.</p>
+  </li>
+</ol>
+
+<div class="callout callout-important">
+  <strong>Important:</strong> Do <strong>not</strong> overwrite <code>connections.json</code>. This file contains your saved database connections, workflow mappings, and access control settings. If you accidentally overwrite it, you will need to reconfigure everything in Settings.
+</div>
+
+<ol start="3">
+  <li>
+    <p><strong>Start the Application Pool</strong> again (or delete the <code>app_offline.htm</code> file).</p>
+  </li>
+  <li>
+    <p><strong>Browse to the site</strong> to verify the update was successful.</p>
+  </li>
+</ol>
+
+<hr>
+
+<h2 id="uninstalling">Uninstalling</h2>
+
+<h3 id="standalone-uninstall">Standalone</h3>
+
+<p>Simply delete the application folder. There is nothing else to clean up.</p>
+
+<h3 id="iis-uninstall">IIS</h3>
+
+<ol>
+  <li><strong>Remove the site or application.</strong> In IIS Manager, right-click the site or application and choose <strong>Remove</strong>. This only removes the IIS configuration &mdash; it does not delete files.</li>
+  <li><strong>Delete the application folder</strong> from the server (e.g., <code>C:\inetpub\APProductivityReport</code>).</li>
+  <li><strong>(Optional) Remove the Application Pool.</strong> In IIS Manager, go to Application Pools, right-click the pool that was used by the application, and choose <strong>Remove</strong>. Only do this if the pool is not shared with other applications.</li>
+</ol>
+
+<hr>
+
+<h2 id="common-installation-issues">Common Installation Issues</h2>
+
+<h3 id="error-500-38">Error 500.38 &mdash; "Failed to locate ASP.NET Core app"</h3>
+
+<p><strong>What it means:</strong> The application files were built in "single-file" mode, which IIS cannot use. This happens if the standalone version was copied to IIS by mistake.</p>
+
+<p><strong>How to fix it:</strong> Make sure you are using the IIS-specific build of the application (the one with multiple <code>.dll</code> files and a <code>web.config</code>), not the standalone <code>.exe</code>. If you are building from source, the application must be published with single-file mode turned off.</p>
+
+<hr>
+
+<h3 id="error-500-19">Error 500.19 &mdash; "Configuration Error"</h3>
+
+<p><strong>What it means:</strong> IIS does not have the component it needs to run the application. Either the .NET 8 Hosting Bundle is not installed, or IIS was not restarted after installing it.</p>
+
+<p><strong>How to fix it:</strong></p>
+
+<ol>
+  <li>Install the <a href="https://dotnet.microsoft.com/download/dotnet/8.0">.NET 8 Hosting Bundle</a> if you have not already.</li>
+  <li>Restart IIS by running <code>iisreset</code> from an Administrator Command Prompt.</li>
+</ol>
+
+<hr>
+
+<h3 id="dpapi-encryption-error-when-saving-settings">DPAPI Encryption Error When Saving Settings</h3>
+
+<p><strong>What it means:</strong> The application cannot securely encrypt database passwords because the "Load User Profile" setting is not enabled on the Application Pool.</p>
+
+<p><strong>How to fix it:</strong></p>
+
+<ol>
+  <li>In IIS Manager, go to <strong>Application Pools</strong>.</li>
+  <li>Select the pool used by the application.</li>
+  <li>Click <strong>Advanced Settings</strong>.</li>
+  <li>Under <strong>Process Model</strong>, set <strong>Load User Profile</strong> to <strong>True</strong>.</li>
+  <li>Restart the Application Pool.</li>
+</ol>
+
+<hr>
+
+<h3 id="access-denied-when-saving-settings-or-connections">"Access Denied" When Saving Settings or Connections</h3>
+
+<p><strong>What it means:</strong> The application does not have permission to write files to its own folder. The folder permissions from <a href="#step-5-set-folder-permissions">Step 5</a> are missing or incorrect.</p>
+
+<p><strong>How to fix it:</strong></p>
+
+<ol>
+  <li>Go back to <a href="#step-5-set-folder-permissions">Step 5</a> and follow the instructions to grant the Application Pool identity <strong>Modify</strong> permission on the application folder.</li>
+  <li>Double-check that you selected the <strong>local server</strong> (not the domain) in the Locations dialog when adding the account.</li>
+</ol>
+
+<hr>
+
+<h3 id="error-404-when-clicking-settings-gear-icon">404 Error When Clicking the Settings (Gear) Icon</h3>
+
+<p><strong>What it means:</strong> The application's internal links are not resolving correctly. This can happen with older builds when the application is hosted as a sub-application under an existing IIS site.</p>
+
+<p><strong>How to fix it:</strong> Make sure you are using the latest version of the application, which includes a fix for URL resolution under sub-applications. See <a href="#updating-the-application">Updating the Application</a>.</p>
+
+<hr>
+
+<h3 id="passwords-lost-after-changing-the-application-pool-identity">Passwords Lost After Changing the Application Pool Identity</h3>
+
+<p><strong>What it means:</strong> Database passwords are encrypted using a Windows security feature called DPAPI, which ties encrypted data to a specific Windows account. If you change which account the Application Pool runs under, previously saved passwords can no longer be decrypted.</p>
+
+<p><strong>How to fix it:</strong> Go to the Settings page and re-enter the database passwords. Everything else (workflow mappings, access control groups) will still be intact.</p>
+
+<hr>
+
+<!-- ===== PART 2: ADMINISTRATION (from ADMIN_GUIDE.md) ===== -->
+
+<h2 id="overview">Overview</h2>
+
+<p>The AP Specialist Productivity Report is a web-based reporting tool that displays invoice processing metrics per AP specialist. It connects to ECMT Workflow databases, reads invoice and approval data, and presents it in a filterable, sortable table with KPI summaries and CSV export.</p>
+
+<p>As an administrator, you are responsible for:</p>
+
+<ul>
+  <li><strong>Database connections</strong> &mdash; Configuring and maintaining the SQL Server connections the application uses to retrieve data.</li>
+  <li><strong>Workflow configuration</strong> &mdash; Mapping workflow fields and approval queues so the report knows how to interpret each workflow's data.</li>
+  <li><strong>Access control</strong> &mdash; Determining which Active Directory groups can access the report.</li>
+  <li><strong>Ongoing maintenance</strong> &mdash; Updating the application, backing up configuration, and resolving issues as they arise.</li>
+</ul>
+
+<p>All of these tasks are performed through the built-in Settings page. No code changes or server-side file editing is required for day-to-day administration.</p>
+
+<hr>
+
+<h2 id="accessing-settings">Accessing Settings</h2>
+
+<p>There are two ways to open the Settings page:</p>
+
+<ol>
+  <li><strong>From the report</strong> &mdash; Click the gear icon in the top-right corner of the report header.</li>
+  <li><strong>By URL</strong> &mdash; Browse directly to <code>/settings.html</code> on the application (e.g., <code>https://servername:8080/settings.html</code>).</li>
+</ol>
+
+<p>On first launch, if no database connections have been configured, the report page automatically redirects you to Settings.</p>
+
+<hr>
+
+<h2 id="database-connections">Database Connections</h2>
+
+<p>The Settings page displays two connection cards side by side at the top: <strong>Workflow Database</strong> and <strong>AppEnhancer Database</strong>.</p>
+
+<h3 id="workflow-database-required">Workflow Database (Required)</h3>
+
+<p>This is the primary connection. The application reads all workflow definitions, invoice data, approval steps, queue assignments, and user information from this database.</p>
+
+<p>Fill in the following fields:</p>
+
+<table>
+  <thead>
+    <tr><th>Field</th><th>Description</th><th>Example</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Server</strong></td><td>SQL Server hostname or IP address</td><td><code>sql-prod-01.ad.contoso.com</code></td></tr>
+    <tr><td><strong>Database</strong></td><td>The ECMT Workflow database name</td><td><code>ECMT_Workflow_v4</code></td></tr>
+    <tr><td><strong>Username</strong></td><td>SQL Server login with read access</td><td><code>reportuser</code></td></tr>
+    <tr><td><strong>Password</strong></td><td>Password for the SQL login</td><td>(hidden after entry)</td></tr>
+  </tbody>
+</table>
+
+<h3 id="appenhancer-database-optional">AppEnhancer Database (Optional)</h3>
+
+<p>This connection provides access to document index data. If your environment uses OpenText AppEnhancer for document storage, configuring this connection enables additional document-level features. If you do not use AppEnhancer, leave this section blank.</p>
+
+<p>The fields are the same as above (Server, Database, Username, Password).</p>
+
+<h3 id="testing-connections">Testing Connections</h3>
+
+<p>Each connection card has a <strong>Test Connection</strong> button. Always test before relying on a connection.</p>
+
+<ul>
+  <li>Click <strong>Test Connection</strong> next to the appropriate card.</li>
+  <li>A success message appears in green below the button if the connection is valid.</li>
+  <li>An error message appears in red if the connection fails, with details about what went wrong.</li>
+  <li><strong>A successful test automatically saves the connection.</strong> You do not need to click a separate Save button after a successful test.</li>
+</ul>
+
+<h3 id="password-encryption">Password Encryption</h3>
+
+<p>All database passwords are encrypted using <strong>Windows DPAPI</strong> (Data Protection API) before being stored on disk. This means:</p>
+
+<ul>
+  <li>Passwords are encrypted using a key tied to the specific Windows account running the application (the IIS Application Pool identity, or the logged-in user for standalone deployments).</li>
+  <li>The encrypted passwords can only be decrypted on the same machine, by the same Windows account.</li>
+  <li>If the Application Pool identity changes, passwords must be re-entered (see <a href="#routine-maintenance">Routine Maintenance</a>).</li>
+  <li>Passwords are never transmitted or stored in plain text.</li>
+</ul>
+
+<hr>
+
+<h2 id="workflow-configuration">Workflow Configuration</h2>
+
+<p>The Workflow Configuration section appears below the database connection cards after a successful Workflow Database connection. If you do not see this section, test your Workflow Database connection first.</p>
+
+<h3 id="selecting-a-workflow">Selecting a Workflow</h3>
+
+<p>At the top of the Workflow Configuration section, a dropdown lists all workflows found in the database. Select the workflow you want to configure for reporting.</p>
+
+<h3 id="field-mappings">Field Mappings</h3>
+
+<p>After selecting a workflow, the application reads all available fields from that workflow and presents them in dropdown menus. You need to map each report column to the correct workflow field.</p>
+
+<table>
+  <thead>
+    <tr><th>Report Field</th><th>Required</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Vendor Name</strong></td><td>Yes</td><td>The vendor or supplier name</td></tr>
+    <tr><td><strong>Invoice Number</strong></td><td>Yes</td><td>The invoice identification number</td></tr>
+    <tr><td><strong>Amount</strong></td><td>Yes</td><td>The invoice dollar amount</td></tr>
+    <tr><td><strong>Invoice Date</strong></td><td>Yes</td><td>The date printed on the invoice</td></tr>
+    <tr><td><strong>DocID</strong></td><td>No</td><td>Links the invoice to an AppEnhancer document</td></tr>
+    <tr><td><strong>Workflow Status</strong></td><td>No</td><td>The current status text of the work item</td></tr>
+    <tr><td><strong>Workflow Queue</strong></td><td>No</td><td>The current queue the work item is in</td></tr>
+  </tbody>
+</table>
+
+<p>The application attempts to <strong>auto-detect</strong> the correct mapping based on field names. For example, a field named "Vendor_Name" would automatically map to the Vendor Name report column. Review these suggestions carefully and adjust any that are incorrect.</p>
+
+<h3 id="queue-role-mappings">Queue Role Mappings</h3>
+
+<p>Below the field mappings, each queue defined in the workflow is listed with a role dropdown. Assign a role to each queue:</p>
+
+<table>
+  <thead>
+    <tr><th>Role</th><th>Meaning</th><th>Typical Queue Names</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Not used</strong></td><td>This queue is not relevant to the report</td><td>Data entry, scanning, exceptions</td></tr>
+    <tr><td><strong>First Approval</strong></td><td>Site Manager or first-level approval step</td><td>"Site Manager Approval", "Manager Review"</td></tr>
+    <tr><td><strong>Second Approval</strong></td><td>Senior or AP-level approval step</td><td>"Senior Approval", "AP Approval"</td></tr>
+  </tbody>
+</table>
+
+<p>The application auto-detects likely approval queues based on name patterns (such as names containing "APPROVAL" or "SENIOR"). Review the suggestions and correct any that do not match your workflow's structure.</p>
+
+<h3 id="saving-the-workflow-mapping">Saving the Workflow Mapping</h3>
+
+<p>Click the <strong>Save Workflow Mapping</strong> button to store your field and queue role selections. A confirmation toast appears in the top-right corner when the save is successful.</p>
+
+<h3 id="configuring-multiple-workflows">Configuring Multiple Workflows</h3>
+
+<p>If your organization uses more than one workflow for invoice processing, repeat the steps above for each workflow:</p>
+
+<ol>
+  <li>Select the next workflow from the dropdown.</li>
+  <li>Map its fields and queue roles.</li>
+  <li>Click <strong>Save Workflow Mapping</strong>.</li>
+</ol>
+
+<p>Each workflow is saved independently. Only workflows that have been configured appear in the report's workflow selector dropdown.</p>
+
+<h3 id="removing-a-workflow">Removing a Workflow</h3>
+
+<p>To unconfigure a workflow and remove it from the report:</p>
+
+<ol>
+  <li>Select the workflow from the dropdown.</li>
+  <li>Click the <strong>Remove Mapping</strong> button (shown in red).</li>
+  <li>The workflow's field and queue mappings are deleted, and it no longer appears in the report dropdown.</li>
+</ol>
+
+<h3 id="workflow-selector-behavior-in-the-report">Workflow Selector Behavior in the Report</h3>
+
+<ul>
+  <li>If <strong>multiple workflows</strong> are configured, the report displays a workflow dropdown so users can choose which one to view.</li>
+  <li>If <strong>only one workflow</strong> is configured, the dropdown is hidden and that workflow is used automatically.</li>
+  <li>If <strong>no workflows</strong> are configured, the report cannot run and users are directed to Settings.</li>
+</ul>
+
+<hr>
+
+<h2 id="access-control">Access Control</h2>
+
+<p>The Access Control section is at the bottom of the Settings page. It controls which users can access the report based on Active Directory group membership.</p>
+
+<h3 id="bootstrap-mode">Bootstrap Mode</h3>
+
+<p>When no AD groups have been configured, the application operates in <strong>bootstrap mode</strong>: all authenticated Windows users who can reach the site are granted access. This is the default state after a fresh installation, allowing you to complete initial setup without being locked out.</p>
+
+<h3 id="adding-ad-groups">Adding AD Groups</h3>
+
+<ol>
+  <li>In the Access Control section, type at least <strong>2 characters</strong> in the search box.</li>
+  <li>The application searches Active Directory via LDAP and displays matching groups in a dropdown below the search box.</li>
+  <li>Click a group name to add it. The group appears as a tag with the group name displayed.</li>
+  <li>Repeat to add additional groups as needed.</li>
+  <li>Click <strong>Save Access Control</strong> to apply.</li>
+</ol>
+
+<p>Once at least one group is saved, only users who belong to one of the configured groups can access the report. All other users see an "Access Denied" message.</p>
+
+<h3 id="removing-ad-groups">Removing AD Groups</h3>
+
+<p>To remove a group, click the <strong>X</strong> on its tag, then click <strong>Save Access Control</strong>.</p>
+
+<p>If you remove all groups and save, the application returns to bootstrap mode (all authenticated users have access).</p>
+
+<h3 id="important-warning-avoid-locking-yourself-out">Important Warning: Avoid Locking Yourself Out</h3>
+
+<p>When you add AD groups to the access list, make sure your own Windows account is a member of at least one of those groups. If you save a group list that does not include your account, you will be locked out of both the report and the Settings page.</p>
+
+<p><strong>If you are locked out</strong>, see the recovery procedure in the <a href="#troubleshooting">Troubleshooting</a> section below.</p>
+
+<hr>
+
+<h2 id="routine-maintenance">Routine Maintenance</h2>
+
+<h3 id="rm-updating-the-application">Updating the Application</h3>
+
+<p>When a new version of the application is available:</p>
+
+<ol>
+  <li>Obtain the new published files from your development team.</li>
+  <li>Stop the application:
+    <ul>
+      <li><strong>IIS</strong>: Stop the Application Pool in IIS Manager, or place an <code>app_offline.htm</code> file in the site folder for a maintenance message.</li>
+      <li><strong>Standalone</strong>: Close the console window or end the process.</li>
+    </ul>
+  </li>
+  <li>Copy the new files into the application folder, overwriting existing files.</li>
+  <li><strong>Do not overwrite <code>connections.json</code>.</strong> This file contains all your saved configuration (database connections, workflow mappings, and access control groups). If you accidentally overwrite it, you will need to reconfigure everything.</li>
+  <li>Restart the application:
+    <ul>
+      <li><strong>IIS</strong>: Start the Application Pool, or delete the <code>app_offline.htm</code> file.</li>
+      <li><strong>Standalone</strong>: Run the .exe again.</li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="backing-up-configuration">Backing Up Configuration</h3>
+
+<p>The file <code>connections.json</code> (located in the application's root folder) contains all application configuration:</p>
+
+<ul>
+  <li>Database connection details (with encrypted passwords)</li>
+  <li>Workflow field and queue role mappings</li>
+  <li>Active Directory group access list</li>
+</ul>
+
+<p><strong>Back up this file regularly</strong>, especially before application updates or server changes. While workflow mappings and group names are stored in plain text and are portable, encrypted passwords are tied to the current machine and service account and cannot be decrypted elsewhere.</p>
+
+<h3 id="application-pool-identity-changes">Application Pool Identity Changes</h3>
+
+<p>If the IIS Application Pool identity is changed (for example, switching from one service account to another):</p>
+
+<ol>
+  <li>Browse to the Settings page.</li>
+  <li>Re-enter the password for each database connection.</li>
+  <li>Click <strong>Test Connection</strong> to save.</li>
+</ol>
+
+<p>This is necessary because DPAPI encryption is tied to the specific Windows account. The new account cannot decrypt passwords that were encrypted by the previous account. Workflow mappings and AD group settings are unaffected.</p>
+
+<h3 id="checking-access-logs">Checking Access Logs</h3>
+
+<p>IIS logs all HTTP requests by default. These logs are located at:</p>
+
+<pre><code>%SystemDrive%\inetpub\logs\LogFiles\</code></pre>
+
+<p>When Windows Authentication is enabled, each log entry includes the authenticated username, the requested URL, timestamp, and response status code. Use these logs to:</p>
+
+<ul>
+  <li>Audit who is accessing the report and when</li>
+  <li>Identify failed access attempts (HTTP 401 or 403 responses)</li>
+  <li>Monitor usage patterns</li>
+</ul>
+
+<p>Configure log settings in IIS Manager under the <strong>Logging</strong> feature for the site.</p>
+
+<hr>
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+<h3 id="connection-failed-on-test">Connection Failed on Test</h3>
+
+<table>
+  <thead>
+    <tr><th>Possible Cause</th><th>Resolution</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>SQL Server hostname is incorrect or unreachable</td><td>Verify the server name and confirm it is reachable from the web server (try <code>ping</code> or <code>telnet servername 1433</code>)</td></tr>
+    <tr><td>SQL login credentials are wrong</td><td>Confirm the username and password by logging in with SQL Server Management Studio</td></tr>
+    <tr><td>TCP/IP is disabled on the SQL Server instance</td><td>Open SQL Server Configuration Manager and enable TCP/IP under Protocols</td></tr>
+    <tr><td>Firewall blocking port 1433</td><td>Check Windows Firewall and any network firewalls between the web server and the database server</td></tr>
+    <tr><td>Database name is misspelled</td><td>Double-check the exact database name in SQL Server Management Studio</td></tr>
+  </tbody>
+</table>
+
+<h3 id="locked-out-of-the-application">Locked Out of the Application</h3>
+
+<p>If you configured AD groups in Access Control and can no longer access the application:</p>
+
+<ol>
+  <li>Log on to the web server (via Remote Desktop or locally).</li>
+  <li>Navigate to the application folder (e.g., <code>C:\inetpub\APProductivityReport\</code>).</li>
+  <li>Delete the file <code>connections.json</code>.</li>
+  <li>Open IIS Manager and recycle the Application Pool for the site.</li>
+  <li>Browse to the application. It will return to first-run state (bootstrap mode), allowing all authenticated users to access it.</li>
+  <li>Reconfigure database connections, workflow mappings, and access control from scratch.</li>
+</ol>
+
+<div class="callout callout-note">
+  <strong>Note:</strong> Deleting <code>connections.json</code> removes all saved configuration. You will need to re-enter database passwords and re-map all workflows. Keep a backup of this file to minimize reconfiguration effort.
+</div>
+
+<h3 id="no-data-returned-in-the-report">No Data Returned in the Report</h3>
+
+<table>
+  <thead>
+    <tr><th>Possible Cause</th><th>Resolution</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>No workflow is configured</td><td>Go to Settings and configure at least one workflow with field and queue mappings</td></tr>
+    <tr><td>Date range is too narrow</td><td>Select a wider date range preset such as "Year to Date" or enter a broader custom range</td></tr>
+    <tr><td>Wrong date basis selected</td><td>Try switching the Date Basis filter (e.g., from "Invoice Date" to "System Created Date")</td></tr>
+    <tr><td>Field mappings are incorrect</td><td>Go to Settings and verify that each field mapping points to the correct workflow field</td></tr>
+    <tr><td>Queue roles are not assigned</td><td>At least one queue must be mapped to "First Approval" or "Second Approval" for approval data to appear</td></tr>
+    <tr><td>The workflow has no work items</td><td>Confirm with your ECMT administrator that the workflow contains data</td></tr>
+  </tbody>
+</table>
+
+<h3 id="dpapi-encryption-errors">DPAPI Encryption Errors</h3>
+
+<p>Symptoms: The application fails to start, or connection tests fail immediately with a cryptographic error.</p>
+
+<table>
+  <thead>
+    <tr><th>Possible Cause</th><th>Resolution</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Application Pool identity was changed</td><td>Re-enter all database passwords in Settings</td></tr>
+    <tr><td><code>connections.json</code> was copied from another server</td><td>Re-enter passwords on the new server; workflow mappings and AD groups will still work</td></tr>
+    <tr><td>"Load User Profile" is set to False on the App Pool</td><td>In IIS Manager, open Application Pool Advanced Settings and set <strong>Load User Profile</strong> to <strong>True</strong></td></tr>
+  </tbody>
+</table>
+
+<h3 id="settings-page-not-loading">Settings Page Not Loading</h3>
+
+<table>
+  <thead>
+    <tr><th>Possible Cause</th><th>Resolution</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Application is not running</td><td>Check that the IIS Application Pool is started, or that the standalone .exe is running</td></tr>
+    <tr><td>Browser is not sending Windows credentials</td><td>Verify that Windows Authentication is enabled and Anonymous Authentication is disabled in IIS</td></tr>
+    <tr><td>Hosted as IIS sub-application with URL issues</td><td>Ensure you are using the latest build, which includes automatic base-path detection for sub-applications</td></tr>
+  </tbody>
+</table>
+
+<h3 id="access-denied-for-a-user">"Access Denied" for a User</h3>
+
+<ol>
+  <li>Confirm that AD groups are configured in Settings &gt; Access Control.</li>
+  <li>Verify that the user's Windows account is a member of at least one of those groups.</li>
+  <li>If no groups are configured, the application should allow all authenticated users. Check that Windows Authentication is enabled and Anonymous Authentication is disabled in IIS.</li>
+  <li>AD group membership changes may require the user to log off and back on (or close and reopen their browser) for updated group tokens to take effect.</li>
+</ol>
+
+<h3 id="application-pool-crashes-repeatedly">Application Pool Crashes Repeatedly</h3>
+
+<ol>
+  <li>Check the Windows Event Log: open <strong>Event Viewer</strong>, navigate to <strong>Windows Logs &gt; Application</strong>, and filter for source <strong>IIS AspNetCore Module V2</strong>.</li>
+  <li>Enable stdout logging for more detail: on the server, edit <code>web.config</code> in the application folder and set <code>stdoutLogEnabled="true"</code>. Create a <code>logs</code> folder in the application directory. Check the log files for error details.</li>
+  <li>Common causes include missing write permissions on the application folder, a corrupted <code>connections.json</code> file, or database connectivity issues during startup. Try deleting <code>connections.json</code> and recycling the Application Pool.</li>
+</ol>
+
+<hr>
+
+<p><em>This guide covers installation, deployment, and administration of the AP Specialist Productivity Report application.</em></p>
+
+</div>
+</div>
+
+</body>
+</html>
